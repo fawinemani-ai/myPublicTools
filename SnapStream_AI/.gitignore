@@ -1,0 +1,23 @@
+# Virtuelle Umgebung (Python)
+venv/
+.venv/
+env/
+
+# Sensible Daten & API-Keys (EXTREM WICHTIG!)
+.env
+config.env
+
+# Lokale Programm-Daten & Caches
+processed_files.json
+*.tmp
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Lokale Ordner (Deine Bilder und Text-Logs)
+screenshots/
+erledigt/
+
+# OS-spezifische Müll-Dateien
+Thumbs.db
+.DS_Store

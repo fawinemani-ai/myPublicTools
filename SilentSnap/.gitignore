@@ -1,0 +1,10 @@
+# Python Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Konfiguration (Enthalten sensible lokale Pfade)
+config.env
+
+# Lokaler Output-Ordner für Screenshots
+/captures/

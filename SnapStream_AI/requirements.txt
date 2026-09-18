@@ -1,0 +1,6 @@
+customtkinter
+python-dotenv
+pillow
+watchdog
+google-genai
+openai
