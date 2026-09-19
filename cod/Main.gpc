@@ -1,0 +1,362 @@
+// ============================================================================
+// 🎮 WARZONE GPC PRO | REBIRTH QUADS EDITION V10 - FINAL
+// ============================================================================
+// 🕹️ Layout: Taktisch (R3 = Jump, Kreis = Crouch/Slide)
+// ⚡ Features: YY-Spam, Aim Assist, Anti-Recoil Curve, Auto-Ping,
+//              Slide + Jump Chain, Directional L2-Release Jump
+// 🚫 Keine Feature-Toggles mehr - alles läuft dauerhaft
+// ============================================================================
+// ----------------------------------------------------------------------------
+// === KONFIGURATION ===
+// ----------------------------------------------------------------------------
+int current_weapon = 0; // 0 = MP (SMG), 1 = AR
+
+// Anti-Recoil Werte
+int recoil_MP = 15;
+int recoil_AR = 20;
+int max_recoil_MP = 30;
+int max_recoil_AR = 40;
+int recoil_curve_rate = 8; // Wie stark die Kurve pro 100ms ansteigt
+
+// Aim Assist Parameter
+int aa_power = 12; // Stärke MP (im Spiel via L2 + R3/L1 anpassbar)
+int aa_power_ar = 8; // Reduzierte Stärke für AR (Long Range)
+int aa_delay = 12; // Loop-Geschwindigkeit (ms)
+int ls_power = 15; // Left-Stick Rotational
+
+// Crouch on ADS (Code-Level: 1 = AN, 0 = AUS)
+int crouch_on_ads_enabled = 0;
+
+// Jump
+int jump_toggle = 100;
+
+// Zwischenspeicher (GPC-Pflicht: alles top-level)
+int active_recoil = 0;
+int final_recoil = 0;
+int recoil_start_value = 0;
+int recoil_elapsed = 0;
+int recoil_curve_bonus = 0;
+int aa_power_current = 0;
+
+// ============================================================================
+// INIT
+// ============================================================================
+init {
+	update_feedback();
+}
+
+// ============================================================================
+// MAIN LOOP
+// ============================================================================
+main {
+	// ------------------------------------------------------------------------
+	// 1. Hair Triggers mit Deadzone
+	// ------------------------------------------------------------------------
+	if (get_val(PS4_L2) > 5) {
+		set_val(PS4_L2, 100);
+	}
+
+	if (get_val(PS4_R2) > 5) {
+		set_val(PS4_R2, 100);
+	}
+
+	// ------------------------------------------------------------------------
+	// 2. Aim-Assist-Stärke tunen (L2 + R3/L1)
+	// ------------------------------------------------------------------------
+	if (get_val(PS4_L2)) {
+		if (event_press(PS4_R3)) {
+			aa_power = aa_power + 2;
+
+			if (aa_power > 30) {
+				aa_power = 30;
+			}
+
+			update_feedback();
+		}
+
+		if (event_press(PS4_L1)) {
+			aa_power = aa_power - 2;
+
+			if (aa_power < 4) {
+				aa_power = 4;
+			}
+
+			update_feedback();
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	// 3. Manueller Profil-Reset (Touchpad + Dreieck)
+	// ------------------------------------------------------------------------
+	if (get_val(PS4_TOUCH) && event_press(PS4_TRIANGLE)) {
+		current_weapon = 0;
+		update_feedback();
+	}
+
+	// ------------------------------------------------------------------------
+	// 4. Y-Y Spam (blitzschnell)
+	// ------------------------------------------------------------------------
+	if (get_val(PS4_RIGHT)) {
+		combo_run(YY_Spam);
+	}
+	else if (combo_running(YY_Spam)) {
+		combo_stop(YY_Spam);
+	}
+
+	// ------------------------------------------------------------------------
+	// 5. Smart Weapon Tracking (Triangle Tap < 300ms)
+	// ------------------------------------------------------------------------
+	if (event_release(PS4_TRIANGLE) && get_ptime(PS4_TRIANGLE) < 300 && !combo_running(YY_Spam)) {
+		if (get_val(PS4_L2)) {
+			current_weapon = 0;
+		}
+		else {
+			current_weapon = !current_weapon;
+		}
+
+		update_feedback();
+	}
+
+	// ------------------------------------------------------------------------
+	// 6. Anti-Recoil mit zeitbasierter Kurve
+	// ------------------------------------------------------------------------
+	if (get_val(PS4_L2) && get_val(PS4_R2)) {
+		// Startwert je Waffe
+		if (current_weapon == 0) {
+			recoil_start_value = recoil_MP;
+		}
+		else {
+			recoil_start_value = recoil_AR;
+		}
+
+		// EXAKTE Haltezeit von R2 in ms
+		recoil_elapsed = get_ptime(PS4_R2);
+		// Kurvenbonus: +X pro 100ms
+		recoil_curve_bonus = (recoil_elapsed / 100) * recoil_curve_rate;
+		active_recoil = recoil_start_value + recoil_curve_bonus;
+
+		// Max-Cap je Waffe
+		if (current_weapon == 0 && active_recoil > max_recoil_MP) {
+			active_recoil = max_recoil_MP;
+		}
+
+		if (current_weapon == 1 && active_recoil > max_recoil_AR) {
+			active_recoil = max_recoil_AR;
+		}
+
+		// Nur kompensieren wenn Spieler nicht selbst stark zielt
+		if (abs(get_val(PS4_RY)) < 40 && abs(get_val(PS4_RX)) < 40) {
+			final_recoil = get_val(PS4_RY) + active_recoil;
+
+			if (final_recoil > 100) {
+				final_recoil = 100;
+			}
+
+			if (final_recoil < -100) {
+				final_recoil = -100;
+			}
+
+			set_val(PS4_RY, final_recoil);
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	// 7. Auto-Ping beim ersten Schuss
+	// ------------------------------------------------------------------------
+	if (get_val(PS4_L2) && event_press(PS4_R2)) {
+		combo_run(AutoPing);
+	}
+
+	// ------------------------------------------------------------------------
+	// 8. Rotational Aim Assist (Rechter + Linker Stick)
+	// ------------------------------------------------------------------------
+	if (get_val(PS4_L2)) {
+		// Wähle AA-Stärke je nach Waffe
+		if (current_weapon == 0) {
+			aa_power_current = aa_power;
+		}
+		else {
+			aa_power_current = aa_power_ar;
+		}
+
+		// Right Stick circular wobble
+		if (abs(get_val(PS4_RX)) < 30 && abs(get_val(PS4_RY)) < 30) {
+			combo_run(SmoothRotationalAA);
+		}
+		else {
+			combo_stop(SmoothRotationalAA);
+		}
+
+		// Left Stick micro-movement
+		if (abs(get_val(PS4_LX)) < 20 && abs(get_val(PS4_LY)) < 20) {
+			combo_run(LeftStickRotational);
+		}
+		else {
+			combo_stop(LeftStickRotational);
+		}
+	}
+	else {
+		combo_stop(SmoothRotationalAA);
+		combo_stop(LeftStickRotational);
+	}
+
+	// ------------------------------------------------------------------------
+	// 9. Crouch on ADS (Code-Level, standard AUS)
+	// ------------------------------------------------------------------------
+	if (crouch_on_ads_enabled && get_val(PS4_L2) && !get_val(PS4_R2)) {
+		set_val(PS4_CIRCLE, 100);
+	}
+
+	// ------------------------------------------------------------------------
+	// 10. SLIDE + 3 JUMP CHAIN (Kreis beim Sprinten)
+	// ------------------------------------------------------------------------
+	if (event_press(PS4_CIRCLE) && get_val(PS4_LY) < -60) {
+		combo_run(SlideJumpChain);
+	}
+
+	// ------------------------------------------------------------------------
+	// 11. Directional L2-Release Jump
+	// ------------------------------------------------------------------------
+	if (get_val(PS4_R2) && event_release(PS4_L2)) {
+		if (get_val(PS4_LX) < -30) {
+			jump_toggle = -100;
+		}
+		else if (get_val(PS4_LX) > 30) {
+			jump_toggle = 100;
+		}
+		else {
+			jump_toggle = -jump_toggle;
+		}
+
+		combo_run(DirectionalQuickJump);
+	}
+}
+
+// ============================================================================
+// 🧠 FEEDBACK (OLED + LEDs)
+// ============================================================================
+function update_feedback() {
+	cls_oled(0);
+
+	// Profil-Name + LED
+	if (current_weapon == 0) {
+		set_led(LED_1, 1);
+		set_led(LED_2, 0);
+		set_led(LED_3, 0);
+		set_led(LED_4, 0);
+		print(25, 8, 0, 1, "PROFIL: MP");
+	}
+	else {
+		set_led(LED_1, 0);
+		set_led(LED_2, 1);
+		set_led(LED_3, 0);
+		set_led(LED_4, 0);
+		print(25, 8, 0, 1, "PROFIL: AR");
+	}
+
+	// Info-Zeile
+	print(0, 28, 0, 1, "ALLE FEATURES AKTIV");
+	print(0, 42, 0, 1, "V10 | SPEED EDITION");
+	// AA-Stärke-Balken
+	print(0, 56, 0, 1, "AA:");
+
+	if (aa_power >= 6) {
+		print(20, 56, 0, 1, ".");
+	}
+
+	if (aa_power >= 10) {
+		print(26, 56, 0, 1, ".");
+	}
+
+	if (aa_power >= 14) {
+		print(32, 56, 0, 1, ".");
+	}
+
+	if (aa_power >= 18) {
+		print(38, 56, 0, 1, ".");
+	}
+
+	if (aa_power >= 22) {
+		print(44, 56, 0, 1, ".");
+	}
+}
+
+// ============================================================================
+// ⚡ COMBOS
+// ============================================================================
+// --- SLIDE + 3 JUMPS (Kreis beim Sprinten) ---
+// Ablauf: Slide -> 3x Jump (R3 in Taktisch)
+// Hinweis: Falls dein Layout Jump auf Kreis hat, ändere alle PS4_R3 zu PS4_CIRCLE
+combo SlideJumpChain {
+	// 1. Slide auslösen
+	set_val(PS4_CIRCLE, 100);
+	wait(60);
+	set_val(PS4_CIRCLE, 0);
+	wait(50);
+	// 2. Jump 1
+	set_val(PS4_R3, 100);
+	wait(50);
+	set_val(PS4_R3, 0);
+	wait(100);
+	// 3. Jump 2
+	set_val(PS4_R3, 100);
+	wait(50);
+	set_val(PS4_R3, 0);
+	wait(100);
+	// 4. Jump 3
+	set_val(PS4_R3, 100);
+	wait(50);
+	set_val(PS4_R3, 0);
+}
+
+// --- Smooth Circular Aim Assist ---
+combo SmoothRotationalAA {
+	set_val(PS4_RY, get_val(PS4_RY) + aa_power_current);
+	set_val(PS4_RX, get_val(PS4_RX) + aa_power_current);
+	wait(aa_delay);
+	set_val(PS4_RY, get_val(PS4_RY) + aa_power_current);
+	set_val(PS4_RX, get_val(PS4_RX) - aa_power_current);
+	wait(aa_delay);
+	set_val(PS4_RY, get_val(PS4_RY) - aa_power_current);
+	set_val(PS4_RX, get_val(PS4_RX) - aa_power_current);
+	wait(aa_delay);
+	set_val(PS4_RY, get_val(PS4_RY) - aa_power_current);
+	set_val(PS4_RX, get_val(PS4_RX) + aa_power_current);
+	wait(aa_delay);
+}
+
+// --- Left Stick Micro-Movement ---
+combo LeftStickRotational {
+	set_val(PS4_LX, get_val(PS4_LX) + ls_power);
+	wait(15);
+	set_val(PS4_LX, get_val(PS4_LX) - ls_power);
+	wait(15);
+}
+
+// --- Auto-Ping ---
+combo AutoPing {
+	set_val(PS4_UP, 100);
+	wait(15);
+	set_val(PS4_UP, 0);
+}
+
+// --- Directional Quick Jump ---
+combo DirectionalQuickJump {
+	set_val(PS4_LX, jump_toggle);
+	set_val(PS4_R3, 100);
+	wait(70);
+	set_val(PS4_LX, jump_toggle);
+	set_val(PS4_R3, 0);
+}
+
+// --- YY-Spam (blitzschnell) ---
+combo YY_Spam {
+	set_val(PS4_TRIANGLE, 100);
+	wait(15);
+	set_val(PS4_TRIANGLE, 0);
+	wait(15);
+	set_val(PS4_TRIANGLE, 100);
+	wait(15);
+	set_val(PS4_TRIANGLE, 0);
+	wait(15);
+}
