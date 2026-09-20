@@ -1,22 +1,27 @@
 // ============================================================================
-// 🎮 WARZONE GPC PRO | REBIRTH QUADS EDITION V11.1 - MOVEMENT EDITION
+// 🎮 WARZONE GPC PRO | V12.1 - ALL-IN-ONE EDITION
+// ============================================================================
+// Alle Features permanent aktiv, ein Profil
 // ============================================================================
 // ----------------------------------------------------------------------------
-// === KONFIGURATION ===
+// KONFIGURATION
 // ----------------------------------------------------------------------------
-int current_weapon = 0;
+int RECOIL_ADS_DELAY = 50;
+int RECOIL_DECAY_MS = 200;
+int AA_RAMP_MS = 180;
+int MAX_AA = 32;
+int MIN_AA = 4;
 
 // Anti-Recoil
-int recoil_MP = 14;
-int recoil_AR = 19;
-int max_recoil_MP = 28;
-int max_recoil_AR = 38;
-int recoil_curve_rate = 6;
+int cur_rv = 16; // Vertikal Startwert
+int cur_rv_max = 34; // Vertikal Max
+int cur_rh = 2; // Horizontal
+int cur_rcr = 6; // Curve Rate
 
 // Aim Assist
-int aa_power = 14;
-int aa_power_ar = 10;
-int aa_delay = 10;
+int aa_base = 14;
+int aa_bias = 0;
+int aa_delay = 18;
 int ls_power = 12;
 int hs_bias = 3;
 
@@ -24,23 +29,22 @@ int hs_bias = 3;
 int strafe_power = 8;
 int bhop_delay = 130;
 
-// Feature-Flags
-int crouch_on_ads_enabled = 0;
-int dropshot_enabled = 1;
-int strafe_aa_enabled = 1;
-int hs_bias_enabled = 1;
-int autosprint_enabled = 1;
-
-// Zwischenspeicher
+// Laufzeit
 int active_recoil = 0;
 int final_recoil = 0;
-int recoil_start_value = 0;
 int recoil_elapsed = 0;
 int recoil_curve_bonus = 0;
 int aa_power_current = 0;
 int last_circle_time = 0;
-int jump_state = 0;
+int jump_state = 100;
+int last_recoil_active = 0;
+int recoil_decay_t = 0;
+int tmp_pct = 0;
+int tmp_decay = 0;
+int ads_time = 0;
+int ramp = 0;
 int hs_ry = 0;
+int rnd_seed = 0;
 
 // ============================================================================
 // INIT
@@ -50,10 +54,10 @@ init {
 }
 
 // ============================================================================
-// MAIN LOOP
+// MAIN
 // ============================================================================
 main {
-	// 1. Hair Triggers
+	// -------- 1. Hair Triggers --------
 	if (get_val(PS4_L2) > 5) {
 		set_val(PS4_L2, 100);
 	}
@@ -62,37 +66,36 @@ main {
 		set_val(PS4_R2, 100);
 	}
 
-	// 2. Aim-Assist-Tuning
+	// -------- 2. AA-Bias Tuning --------
 	if (get_val(PS4_L2)) {
 		if (event_press(PS4_R3)) {
-			aa_power = aa_power + 2;
+			aa_bias = aa_bias + 2;
 
-			if (aa_power > 32) {
-				aa_power = 32;
+			if (aa_bias > 18) {
+				aa_bias = 18;
 			}
 
 			update_feedback();
 		}
 
 		if (event_press(PS4_L1)) {
-			aa_power = aa_power - 2;
+			aa_bias = aa_bias - 2;
 
-			if (aa_power < 4) {
-				aa_power = 4;
+			if (aa_bias < -10) {
+				aa_bias = -10;
 			}
 
 			update_feedback();
 		}
 	}
 
-	// 3. Profil-Reset
+	// -------- 3. Reset --------
 	if (get_val(PS4_TOUCH) && event_press(PS4_TRIANGLE)) {
-		current_weapon = 0;
-		aa_power = 14;
+		aa_bias = 0;
 		update_feedback();
 	}
 
-	// 4. Y-Y Spam
+	// -------- 4. Y-Y Spam --------
 	if (get_val(PS4_RIGHT)) {
 		combo_run(YY_Spam);
 	}
@@ -100,21 +103,10 @@ main {
 		combo_stop(YY_Spam);
 	}
 
-	// 5. Weapon Tracking
-	if (event_release(PS4_TRIANGLE) && get_ptime(PS4_TRIANGLE) < 300 && !combo_running(YY_Spam)) {
-		if (get_val(PS4_L2)) {
-			current_weapon = 0;
-		}
-		else {
-			current_weapon = !current_weapon;
-		}
-
-		update_feedback();
-	}
-
-	// 6. Anti-Recoil
-	if (get_val(PS4_L2) && get_val(PS4_R2)) {
-		recoil_start_value = (current_weapon == 0) ? recoil_MP : recoil_AR;
+	// -------- 5. Anti-Recoil --------
+	if (get_val(PS4_L2) && get_val(PS4_R2) && get_ptime(PS4_R2) > RECOIL_ADS_DELAY) {
+		last_recoil_active = 1;
+		recoil_decay_t = 0;
 		recoil_elapsed = get_ptime(PS4_R2);
 		recoil_curve_bonus = (recoil_elapsed * recoil_elapsed) / 3000;
 
@@ -122,14 +114,10 @@ main {
 			recoil_curve_bonus = 15;
 		}
 
-		active_recoil = recoil_start_value + (recoil_elapsed / 100) * recoil_curve_rate + recoil_curve_bonus;
+		active_recoil = cur_rv + (recoil_elapsed / 100) * cur_rcr + recoil_curve_bonus;
 
-		if (current_weapon == 0 && active_recoil > max_recoil_MP) {
-			active_recoil = max_recoil_MP;
-		}
-
-		if (current_weapon == 1 && active_recoil > max_recoil_AR) {
-			active_recoil = max_recoil_AR;
+		if (active_recoil > cur_rv_max) {
+			active_recoil = cur_rv_max;
 		}
 
 		if (abs(get_val(PS4_RY)) < 40 && abs(get_val(PS4_RX)) < 40) {
@@ -144,11 +132,42 @@ main {
 			}
 
 			set_val(PS4_RY, final_recoil);
+
+			// Horizontaler Recoil
+			if (cur_rh > 0) {
+				rnd_seed = (rnd_seed + 7) % 100;
+
+				if (rnd_seed > 50) {
+					set_val(PS4_RX, get_val(PS4_RX) + cur_rh);
+				}
+				else {
+					set_val(PS4_RX, get_val(PS4_RX) - cur_rh);
+				}
+			}
 		}
 	}
+	else if (last_recoil_active) {
+		recoil_decay_t = recoil_decay_t + 20;
 
-	// 7. Headshot-Bias (FIX: keine lokale Deklaration mehr)
-	if (hs_bias_enabled && get_val(PS4_L2) && !get_val(PS4_R2)) {
+		if (recoil_decay_t >= RECOIL_DECAY_MS) {
+			last_recoil_active = 0;
+			recoil_decay_t = 0;
+		}
+		else {
+			tmp_pct = 100 - ((recoil_decay_t * 100) / RECOIL_DECAY_MS);
+			tmp_decay = (active_recoil * tmp_pct) / 100;
+
+			if (tmp_decay > 0) {
+				set_val(PS4_RY, get_val(PS4_RY) + tmp_decay);
+			}
+		}
+	}
+	else {
+		last_recoil_active = 0;
+	}
+
+	// -------- 6. Headshot-Bias --------
+	if (get_val(PS4_L2) && !get_val(PS4_R2)) {
 		hs_ry = get_val(PS4_RY);
 
 		if (hs_ry > -50) {
@@ -156,14 +175,36 @@ main {
 		}
 	}
 
-	// 8. Auto-Ping
+	// -------- 7. Auto-Ping --------
 	if (get_val(PS4_L2) && event_press(PS4_R2)) {
 		combo_run(AutoPing);
 	}
 
-	// 9. Rotational Aim Assist
+	// -------- 8. Rapid Fire (L2 + DPAD-Down zum schnellen An/Aus) --------
+	if (get_val(PS4_L2) && event_press(PS4_DOWN)) {
+		combo_run(RapidFire);
+	}
+
+	// -------- 9. Rotational AA mit Ramp --------
 	if (get_val(PS4_L2)) {
-		aa_power_current = (current_weapon == 0) ? aa_power : aa_power_ar;
+		ads_time = get_ptime(PS4_L2);
+		ramp = 100;
+
+		if (ads_time < AA_RAMP_MS) {
+			ramp = (ads_time * 100) / AA_RAMP_MS;
+		}
+
+		aa_power_current = aa_base + aa_bias;
+
+		if (aa_power_current < MIN_AA) {
+			aa_power_current = MIN_AA;
+		}
+
+		if (aa_power_current > MAX_AA) {
+			aa_power_current = MAX_AA;
+		}
+
+		aa_power_current = (aa_power_current * ramp) / 100;
 
 		if (abs(get_val(PS4_RX)) < 30 && abs(get_val(PS4_RY)) < 30) {
 			combo_run(SmoothRotationalAA);
@@ -184,35 +225,30 @@ main {
 		combo_stop(LeftStickRotational);
 	}
 
-	// 10. Strafe Aim
-	if (strafe_aa_enabled && get_val(PS4_L2) && get_val(PS4_R2)) {
+	// -------- 10. Strafe Aim --------
+	if (get_val(PS4_L2) && get_val(PS4_R2)) {
 		combo_run(StrafeAim);
 	}
 	else {
 		combo_stop(StrafeAim);
 	}
 
-	// 11. Snap Aim
+	// -------- 11. Snap Aim --------
 	if (event_press(PS4_R3) && !get_val(PS4_L2) && abs(get_val(PS4_RX)) > 40) {
 		combo_run(SnapAim);
 	}
 
-	// 12. Crouch on ADS
-	if (crouch_on_ads_enabled && get_val(PS4_L2) && !get_val(PS4_R2)) {
-		set_val(PS4_CIRCLE, 100);
-	}
-
-	// 13. Drop Shot
-	if (dropshot_enabled && event_press(PS4_R2) && !get_val(PS4_L2) && !get_val(PS4_CIRCLE)) {
+	// -------- 12. Drop Shot --------
+	if (event_press(PS4_R2) && !get_val(PS4_L2) && !get_val(PS4_CIRCLE)) {
 		combo_run(DropShot);
 	}
 
-	// 14. Slide + 3 Jump
+	// -------- 13. Slide + 3 Jump --------
 	if (event_press(PS4_CIRCLE) && get_val(PS4_LY) < -60) {
 		combo_run(SlideJumpChain);
 	}
 
-	// 15. Slide Cancel
+	// -------- 14. Slide Cancel --------
 	if (event_press(PS4_CIRCLE)) {
 		if (get_rtime() - last_circle_time < 400) {
 			combo_run(SlideCancel);
@@ -221,20 +257,27 @@ main {
 		last_circle_time = get_rtime();
 	}
 
-	// 16. Bunny Hop
+	// -------- 15. Bunny Hop --------
 	if (get_val(PS4_L3) && get_val(PS4_LY) < -50) {
+		if ((get_rtime() % 4) < 2) {
+			bhop_delay = 128;
+		}
+		else {
+			bhop_delay = 134;
+		}
+
 		combo_run(BunnyHop);
 	}
 	else {
 		combo_stop(BunnyHop);
 	}
 
-	// 17. Auto Sprint
-	if (autosprint_enabled && event_press(PS4_L3) && get_val(PS4_LY) < -70) {
+	// -------- 16. Auto Sprint --------
+	if (event_press(PS4_L3) && get_val(PS4_LY) < -70) {
 		combo_run(AutoSprint);
 	}
 
-	// 18. Directional L2-Release Jump
+	// -------- 17. Directional L2-Release Jump --------
 	if (get_val(PS4_R2) && event_release(PS4_L2)) {
 		if (get_val(PS4_LX) < -30) {
 			jump_state = -100;
@@ -255,50 +298,43 @@ main {
 // ============================================================================
 function update_feedback() {
 	cls_oled(0);
+	set_led(LED_1, 1);
+	set_led(LED_2, 1);
+	set_led(LED_3, 1);
+	set_led(LED_4, 1);
+	print(0, 8, 0, 1, "WARZONE V12.1");
+	print(0, 22, 0, 1, "ALL-IN-ONE");
+	print(0, 38, 0, 1, "AA:");
 
-	if (current_weapon == 0) {
-		set_led(LED_1, 1);
-		set_led(LED_2, 0);
-		set_led(LED_3, 0);
-		set_led(LED_4, 0);
-		print(25, 8, 0, 1, "PROFIL: MP");
-	}
-	else {
-		set_led(LED_1, 0);
-		set_led(LED_2, 1);
-		set_led(LED_3, 0);
-		set_led(LED_4, 0);
-		print(25, 8, 0, 1, "PROFIL: AR");
+	if (aa_bias >= -10) {
+		print(24, 38, 0, 1, ".");
 	}
 
-	print(0, 26, 0, 1, "V11 MOVEMENT EDITION");
-	print(0, 40, 0, 1, "AA:");
-
-	if (aa_power >= 6) {
-		print(20, 40, 0, 1, ".");
+	if (aa_bias >= -6) {
+		print(30, 38, 0, 1, ".");
 	}
 
-	if (aa_power >= 10) {
-		print(26, 40, 0, 1, ".");
+	if (aa_bias >= -2) {
+		print(36, 38, 0, 1, ".");
 	}
 
-	if (aa_power >= 14) {
-		print(32, 40, 0, 1, ".");
+	if (aa_bias >= 2) {
+		print(42, 38, 0, 1, ".");
 	}
 
-	if (aa_power >= 18) {
-		print(38, 40, 0, 1, ".");
+	if (aa_bias >= 6) {
+		print(48, 38, 0, 1, ".");
 	}
 
-	if (aa_power >= 22) {
-		print(44, 40, 0, 1, ".");
+	if (aa_bias >= 10) {
+		print(54, 38, 0, 1, ".");
 	}
 
-	if (aa_power >= 26) {
-		print(50, 40, 0, 1, ".");
+	if (aa_bias >= 14) {
+		print(60, 38, 0, 1, ".");
 	}
 
-	print(0, 54, 0, 1, "DROP/STRAFE/HS: ON");
+	print(0, 54, 0, 1, "ALL FEATURES: ON");
 }
 
 // ============================================================================
@@ -416,6 +452,13 @@ combo DirectionalQuickJump {
 	wait(70);
 	set_val(PS4_LX, jump_state);
 	set_val(PS4_R3, 0);
+}
+
+combo RapidFire {
+	set_val(PS4_R2, 100);
+	wait(35);
+	set_val(PS4_R2, 0);
+	wait(35);
 }
 
 combo YY_Spam {
