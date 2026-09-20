@@ -1,9 +1,9 @@
-# 🎮 WARZONE GPC PRO V10 – Rebirth Quads Edition
+# 🎮 WARZONE GPC PRO V12.1 – All-in-One Edition
 
-Ein hochoptimiertes Cronus Zen GPC-Script für Call of Duty: Warzone (Rebirth Island Quads). 
-Fokus auf **Geschwindigkeit**, **Präzision** und **Bewegungsfluss** – ohne Ballast.
+Ein hochoptimiertes Cronus Zen GPC-Script für Call of Duty: Warzone (Rebirth Island Quads).
+**Alle Features dauerhaft aktiv – ein einziges Profil, kein Umschalten, kein Ballast.**
 
-![Version](https://img.shields.io/badge/version-10.0-blue)
+![Version](https://img.shields.io/badge/version-12.1-blue)
 ![Platform](https://img.shields.io/badge/platform-Cronus%20Zen-green)
 ![Game](https://img.shields.io/badge/game-Warzone-orange)
 
@@ -12,7 +12,6 @@ Fokus auf **Geschwindigkeit**, **Präzision** und **Bewegungsfluss** – ohne Ba
 ## 📋 Inhaltsverzeichnis
 
 - [Features](#-features)
-- [Installation](#-installation)
 - [Steuerung](#-steuerung)
 - [Konfiguration](#-konfiguration)
 - [Tuning-Tipps](#-tuning-tipps)
@@ -26,43 +25,47 @@ Fokus auf **Geschwindigkeit**, **Präzision** und **Bewegungsfluss** – ohne Ba
 ### 🎯 Aim Assist
 - **Smooth Rotational Aim Assist** – kreisförmige Mikro-Bewegung des rechten Sticks
 - **Left Stick Micro-Movement** – triggert In-Game Rotational AA
+- **AA-Ramp** – sanftes Einblenden über 180 ms nach ADS-Start (kein erster Schuss-Jitter)
 - **Automatische Pause** bei manuellem Zielen (`RX/RY > 30`)
-- **Waffenspezifische Stärke** – MP (stark) vs AR (schwächer, weniger Jitter)
 - **Live-Anpassung** via `L2 + R3` / `L2 + L1`
 - **Visueller AA-Balken** auf dem OLED-Display
 
 ### 🔫 Anti-Recoil
 - **Zeitbasierte Kurve** – Kompensation steigt progressiv mit der Feuerdauer
-- **Pro-Waffe konfigurierbar** – getrennte Werte für MP und AR
+- **ADS-Delay** – greift erst 50 ms nach dem Einzoomen (verhindert Erstschuss-Versatz)
+- **Horizontaler Recoil** – kompensiert auch seitlichen Waffen-Drift
+- **Ramp-Down** – weiches Auslaufen über 200 ms nach Schussende
 - **Max-Cap** verhindert Überkompensation
 - **Smart-Pause** – deaktiviert sich, wenn du selbst stark zielst (`RX/RY > 40`)
-- **Sofortiger Reset** nach dem Feuern
+
+### 🎯 Präzisions-Features
+- **Headshot-Bias** – Stick wird bei ADS leicht nach oben gezogen
+- **Snap-Aim** – kurzer Impuls bei `R3` ohne ADS, verstärkt Stick-Ausschlag um 50%
+- **Strafe Aim** – Mikro-Strafe beim Feuern für treffsichere Aim-Assist-Trigger
 
 ### 🏃 Movement & Combos
-- **YY-Spam** – blitzschnelles Waffenwechseln (60ms Zyklus) für Movement-Flow
+- **YY-Spam** – blitzschnelles Waffenwechseln für Movement-Flow
 - **Slide + 3 Jump Chain** – Kreis beim Sprinten → Slide + 3 automatische Jumps
+- **Slide Cancel** – doppelt Kreis < 400 ms
+- **Bunny Hop** – dynamisches Timing (128/134 ms) gegen Makro-Erkennung
+- **Auto Sprint** – Sprint-Trigger bei Anlauf + L3
 - **Directional L2-Release Jump** – Springt in Stick-Richtung beim Loslassen von L2
-- **Kein versehentlicher Jump** mehr beim Feuern
+
+### 💥 Combat-Features
+- **Drop Shot** – automatisches Hinlegen beim Feuern ohne ADS
+- **Rapid Fire** – Doppelschuss-Impuls (L2 + DPAD-Down)
+- **Auto-Ping** – markiert Gegner für das Team beim ersten Schuss
 
 ### 🖥️ OLED & LED Feedback
-- **Profil-Anzeige** – MP / AR wird live angezeigt
-- **LED-1** = MP-Profil aktiv
-- **LED-2** = AR-Profil aktiv
-- **AA-Stärke-Balken** – visuell als Punkte dargestellt
-- **Versions-Info** auf dem Display
-
-### 🎛️ Weitere Features
-- **Instant Hair Triggers** mit Deadzone (verhindert Ghost-Inputs)
-- **Auto-Ping** beim ersten Schuss (markiert Gegner für das Team)
-- **Smart Weapon Tracking** – Waffenwechsel durch kurzes Dreieck-Drücken
-- **Manueller Profil-Reset** – Touchpad + Dreieck
-- **Crouch on ADS** (optional, Code-Level)
+- **Vollversion-Anzeige** – WARZONE V12.1 / ALL-IN-ONE
+- **AA-Balken** – 7-stufige visuelle Anzeige
+- **Alle 4 LEDs aktiv** – bestätigt "All Features ON"
 
 ### 🚫 Bewusst NICHT enthalten
-- ❌ Drop-Shot (kein Hinlegen)
+- ❌ Profil-Umschaltung (ein einziges, alles-aktiv Profil)
+- ❌ Feature-Toggles (alles läuft dauerhaft)
 - ❌ Auto-Plating Evasion
 - ❌ Auto-Rotate Loot
-- ❌ Feature-Toggles (alles läuft dauerhaft)
 
 ---
 
@@ -73,13 +76,23 @@ Fokus auf **Geschwindigkeit**, **Präzision** und **Bewegungsfluss** – ohne Ba
 | Eingabe | Wirkung |
 |---------|---------|
 | **KREIS beim Sprinten** | 🔥 Slide + 3 automatische Jumps |
+| **KREIS doppelt < 400ms** | Slide Cancel |
 | **RECHTS halten** | YY-Spam (Waffenwechsel-Flow) |
-| **TRIANGLE kurz (<300ms)** | Waffenprofil wechseln (MP ↔ AR) |
-| **TOUCHPAD + DREIECK** | Profil manuell auf MP zurücksetzen |
-| **L2 + R2 halten** | Zielen + Feuern (Anti-Recoil aktiv) |
+| **L3 + Stick hoch** | Bunny Hop |
+| **L3 bei Anlauf** | Auto Sprint |
+| **L2 + R2 halten** | Zielen + Feuern (Anti-Recoil + Strafe Aim aktiv) |
 | **L2 loslassen während R2** | Directional Jump (Richtung per Stick) |
+| **R2 ohne L2** | Drop Shot |
+| **R3 (ohne L2, mit RX > 40)** | Snap Aim |
+| **L2 + DPAD-Down** | Rapid-Fire Impuls |
+
+### Tuning-Inputs
+
+| Eingabe | Wirkung |
+|---------|---------|
 | **L2 + R3** | Aim-Assist-Stärke +2 |
 | **L2 + L1** | Aim-Assist-Stärke −2 |
+| **TOUCHPAD + DREIECK** | AA-Bias zurücksetzen |
 
 ### Jump-Richtung (L2-Release)
 
@@ -98,8 +111,9 @@ Alle Werte können am Anfang des Skripts angepasst werden:
 ### Anti-Recoil
 
 ```gpc
-int recoil_MP         = 15;    // Startwert MP
-int recoil_AR         = 20;    // Startwert AR
-int max_recoil_MP     = 30;    // Maximale Kompensation MP
-int max_recoil_AR     = 40;    // Maximale Kompensation AR
-int recoil_curve_rate = 8;     // Anstieg pro 100ms Feuerzeit
+int cur_rv       = 16;   // Recoil vertikal Startwert
+int cur_rv_max   = 34;   // Recoil vertikal Max
+int cur_rh       = 2;    // Recoil horizontal (0 = aus)
+int cur_rcr      = 6;    // Recoil Curve Rate
+int RECOIL_ADS_DELAY = 50;   // ms bevor Recoil greift
+int RECOIL_DECAY_MS  = 200;  // ms Auslaufzeit nach Schussende
