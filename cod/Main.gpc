@@ -1,11 +1,6 @@
 // ============================================================================
-// 🎮 WARZONE GPC PRO | V12.1 - ALL-IN-ONE EDITION
+// 🎮 WARZONE GPC PRO | V12.5 - STICK & MOVE EDITION (FINAL OPTIMIERT)
 // ============================================================================
-// Alle Features permanent aktiv, ein Profil
-// ============================================================================
-// ----------------------------------------------------------------------------
-// KONFIGURATION
-// ----------------------------------------------------------------------------
 int RECOIL_ADS_DELAY = 50;
 int RECOIL_DECAY_MS = 200;
 int AA_RAMP_MS = 180;
@@ -13,10 +8,10 @@ int MAX_AA = 32;
 int MIN_AA = 4;
 
 // Anti-Recoil
-int cur_rv = 16; // Vertikal Startwert
-int cur_rv_max = 34; // Vertikal Max
-int cur_rh = 2; // Horizontal
-int cur_rcr = 6; // Curve Rate
+int cur_rv = 16;
+int cur_rv_max = 34;
+int cur_rh = 2;
+int cur_rcr = 6;
 
 // Aim Assist
 int aa_base = 14;
@@ -35,8 +30,6 @@ int final_recoil = 0;
 int recoil_elapsed = 0;
 int recoil_curve_bonus = 0;
 int aa_power_current = 0;
-int last_circle_time = 0;
-int jump_state = 100;
 int last_recoil_active = 0;
 int recoil_decay_t = 0;
 int tmp_pct = 0;
@@ -45,17 +38,12 @@ int ads_time = 0;
 int ramp = 0;
 int hs_ry = 0;
 int rnd_seed = 0;
+int last_circle_time = 0;
 
-// ============================================================================
-// INIT
-// ============================================================================
 init {
 	update_feedback();
 }
 
-// ============================================================================
-// MAIN
-// ============================================================================
 main {
 	// -------- 1. Hair Triggers --------
 	if (get_val(PS4_L2) > 5) {
@@ -68,23 +56,13 @@ main {
 
 	// -------- 2. AA-Bias Tuning --------
 	if (get_val(PS4_L2)) {
-		if (event_press(PS4_R3)) {
-			aa_bias = aa_bias + 2;
-
-			if (aa_bias > 18) {
-				aa_bias = 18;
-			}
-
+		if (event_press(PS4_UP)) {
+			aa_bias = clamp(aa_bias + 2, -10, 18);
 			update_feedback();
 		}
 
-		if (event_press(PS4_L1)) {
-			aa_bias = aa_bias - 2;
-
-			if (aa_bias < -10) {
-				aa_bias = -10;
-			}
-
+		if (event_press(PS4_DOWN)) {
+			aa_bias = clamp(aa_bias - 2, -10, 18);
 			update_feedback();
 		}
 	}
@@ -103,7 +81,7 @@ main {
 		combo_stop(YY_Spam);
 	}
 
-	// -------- 5. Anti-Recoil --------
+	// -------- 5. Anti-Recoil (Optimiert) --------
 	if (get_val(PS4_L2) && get_val(PS4_R2) && get_ptime(PS4_R2) > RECOIL_ADS_DELAY) {
 		last_recoil_active = 1;
 		recoil_decay_t = 0;
@@ -121,45 +99,40 @@ main {
 		}
 
 		if (abs(get_val(PS4_RY)) < 40 && abs(get_val(PS4_RX)) < 40) {
-			final_recoil = get_val(PS4_RY) + active_recoil;
-
-			if (final_recoil > 100) {
-				final_recoil = 100;
-			}
-
-			if (final_recoil < -100) {
-				final_recoil = -100;
-			}
-
+			final_recoil = clamp(get_val(PS4_RY) + active_recoil, -100, 100);
 			set_val(PS4_RY, final_recoil);
 
-			// Horizontaler Recoil
 			if (cur_rh > 0) {
 				rnd_seed = (rnd_seed + 7) % 100;
 
 				if (rnd_seed > 50) {
-					set_val(PS4_RX, get_val(PS4_RX) + cur_rh);
+					set_val(PS4_RX, clamp(get_val(PS4_RX) + cur_rh, -100, 100));
 				}
 				else {
-					set_val(PS4_RX, get_val(PS4_RX) - cur_rh);
+					set_val(PS4_RX, clamp(get_val(PS4_RX) - cur_rh, -100, 100));
 				}
 			}
 		}
 	}
 	else if (last_recoil_active) {
-		recoil_decay_t = recoil_decay_t + 20;
+		if (RECOIL_DECAY_MS > 0) {
+			recoil_decay_t = recoil_decay_t + 20;
 
-		if (recoil_decay_t >= RECOIL_DECAY_MS) {
-			last_recoil_active = 0;
-			recoil_decay_t = 0;
+			if (recoil_decay_t >= RECOIL_DECAY_MS || abs(get_val(PS4_RY)) > 30) {
+				last_recoil_active = 0;
+				recoil_decay_t = 0;
+			}
+			else {
+				tmp_pct = 100 - ((recoil_decay_t * 100) / RECOIL_DECAY_MS);
+				tmp_decay = (active_recoil * tmp_pct) / 100;
+
+				if (tmp_decay > 0) {
+					set_val(PS4_RY, clamp(get_val(PS4_RY) + tmp_decay, -100, 100));
+				}
+			}
 		}
 		else {
-			tmp_pct = 100 - ((recoil_decay_t * 100) / RECOIL_DECAY_MS);
-			tmp_decay = (active_recoil * tmp_pct) / 100;
-
-			if (tmp_decay > 0) {
-				set_val(PS4_RY, get_val(PS4_RY) + tmp_decay);
-			}
+			last_recoil_active = 0;
 		}
 	}
 	else {
@@ -171,7 +144,7 @@ main {
 		hs_ry = get_val(PS4_RY);
 
 		if (hs_ry > -50) {
-			set_val(PS4_RY, hs_ry - hs_bias);
+			set_val(PS4_RY, clamp(hs_ry - hs_bias, -100, 100));
 		}
 	}
 
@@ -180,8 +153,8 @@ main {
 		combo_run(AutoPing);
 	}
 
-	// -------- 8. Rapid Fire (L2 + DPAD-Down zum schnellen An/Aus) --------
-	if (get_val(PS4_L2) && event_press(PS4_DOWN)) {
+	// -------- 8. Rapid Fire --------
+	if (get_val(PS4_L2) && event_press(PS4_CIRCLE)) {
 		combo_run(RapidFire);
 	}
 
@@ -190,20 +163,11 @@ main {
 		ads_time = get_ptime(PS4_L2);
 		ramp = 100;
 
-		if (ads_time < AA_RAMP_MS) {
+		if (AA_RAMP_MS > 0 && ads_time < AA_RAMP_MS) {
 			ramp = (ads_time * 100) / AA_RAMP_MS;
 		}
 
-		aa_power_current = aa_base + aa_bias;
-
-		if (aa_power_current < MIN_AA) {
-			aa_power_current = MIN_AA;
-		}
-
-		if (aa_power_current > MAX_AA) {
-			aa_power_current = MAX_AA;
-		}
-
+		aa_power_current = clamp(aa_base + aa_bias, MIN_AA, MAX_AA);
 		aa_power_current = (aa_power_current * ramp) / 100;
 
 		if (abs(get_val(PS4_RX)) < 30 && abs(get_val(PS4_RY)) < 30) {
@@ -234,7 +198,7 @@ main {
 	}
 
 	// -------- 11. Snap Aim --------
-	if (event_press(PS4_R3) && !get_val(PS4_L2) && abs(get_val(PS4_RX)) > 40) {
+	if (event_press(PS4_R3) && get_val(PS4_TOUCH) && !get_val(PS4_L2) && abs(get_val(PS4_RX)) > 40) {
 		combo_run(SnapAim);
 	}
 
@@ -243,7 +207,7 @@ main {
 		combo_run(DropShot);
 	}
 
-	// -------- 13. Slide + 3 Jump --------
+	// -------- 13. Slide + Jump Chain --------
 	if (event_press(PS4_CIRCLE) && get_val(PS4_LY) < -60) {
 		combo_run(SlideJumpChain);
 	}
@@ -276,21 +240,6 @@ main {
 	if (event_press(PS4_L3) && get_val(PS4_LY) < -70) {
 		combo_run(AutoSprint);
 	}
-
-	// -------- 17. Directional L2-Release Jump --------
-	if (get_val(PS4_R2) && event_release(PS4_L2)) {
-		if (get_val(PS4_LX) < -30) {
-			jump_state = -100;
-		}
-		else if (get_val(PS4_LX) > 30) {
-			jump_state = 100;
-		}
-		else {
-			jump_state = -jump_state;
-		}
-
-		combo_run(DirectionalQuickJump);
-	}
 }
 
 // ============================================================================
@@ -298,43 +247,9 @@ main {
 // ============================================================================
 function update_feedback() {
 	cls_oled(0);
-	set_led(LED_1, 1);
-	set_led(LED_2, 1);
-	set_led(LED_3, 1);
-	set_led(LED_4, 1);
-	print(0, 8, 0, 1, "WARZONE V12.1");
-	print(0, 22, 0, 1, "ALL-IN-ONE");
-	print(0, 38, 0, 1, "AA:");
-
-	if (aa_bias >= -10) {
-		print(24, 38, 0, 1, ".");
-	}
-
-	if (aa_bias >= -6) {
-		print(30, 38, 0, 1, ".");
-	}
-
-	if (aa_bias >= -2) {
-		print(36, 38, 0, 1, ".");
-	}
-
-	if (aa_bias >= 2) {
-		print(42, 38, 0, 1, ".");
-	}
-
-	if (aa_bias >= 6) {
-		print(48, 38, 0, 1, ".");
-	}
-
-	if (aa_bias >= 10) {
-		print(54, 38, 0, 1, ".");
-	}
-
-	if (aa_bias >= 14) {
-		print(60, 38, 0, 1, ".");
-	}
-
-	print(0, 54, 0, 1, "ALL FEATURES: ON");
+	print(0, 8, 0, 1, "WARZONE V12.5");
+	print(0, 22, 0, 1, "STICK & MOVE");
+	print(0, 38, 0, 1, "ALL FEATURES: ON");
 }
 
 // ============================================================================
@@ -349,13 +264,6 @@ combo SlideJumpChain {
 	wait(50);
 	set_val(PS4_R3, 0);
 	wait(100);
-	set_val(PS4_R3, 100);
-	wait(50);
-	set_val(PS4_R3, 0);
-	wait(100);
-	set_val(PS4_R3, 100);
-	wait(50);
-	set_val(PS4_R3, 0);
 }
 
 combo SlideCancel {
@@ -386,57 +294,34 @@ combo DropShot {
 	wait(60);
 	set_val(PS4_CIRCLE, 0);
 	wait(80);
-	set_val(PS4_CIRCLE, 100);
-	wait(40);
-	set_val(PS4_CIRCLE, 0);
 }
 
 combo StrafeAim {
-	set_val(PS4_LX, get_val(PS4_LX) + strafe_power);
+	set_val(PS4_LX, clamp(get_val(PS4_LX) + strafe_power, -100, 100));
 	wait(45);
-	set_val(PS4_LX, get_val(PS4_LX) - strafe_power);
+	set_val(PS4_LX, clamp(get_val(PS4_LX) - strafe_power, -100, 100));
 	wait(45);
 }
 
 combo SnapAim {
-	set_val(PS4_RX, get_val(PS4_RX) + (get_val(PS4_RX) / 2));
-	set_val(PS4_RY, get_val(PS4_RY) + (get_val(PS4_RY) / 2));
+	set_val(PS4_RX, clamp(get_val(PS4_RX) + (get_val(PS4_RX) / 2), -100, 100));
+	set_val(PS4_RY, clamp(get_val(PS4_RY) + (get_val(PS4_RY) / 2), -100, 100));
 	wait(25);
-	set_val(PS4_RX, get_val(PS4_RX));
-	set_val(PS4_RY, get_val(PS4_RY));
 }
 
 combo SmoothRotationalAA {
-	set_val(PS4_RY, get_val(PS4_RY) + aa_power_current);
-	set_val(PS4_RX, get_val(PS4_RX) + aa_power_current);
+	set_val(PS4_RY, clamp(get_val(PS4_RY) + aa_power_current, -100, 100));
+	set_val(PS4_RX, clamp(get_val(PS4_RX) + aa_power_current, -100, 100));
 	wait(aa_delay);
-	set_val(PS4_RY, get_val(PS4_RY) + aa_power_current);
+	set_val(PS4_RY, clamp(get_val(PS4_RY) + aa_power_current, -100, 100));
 	set_val(PS4_RX, get_val(PS4_RX));
-	wait(aa_delay);
-	set_val(PS4_RY, get_val(PS4_RY) + aa_power_current);
-	set_val(PS4_RX, get_val(PS4_RX) - aa_power_current);
-	wait(aa_delay);
-	set_val(PS4_RY, get_val(PS4_RY));
-	set_val(PS4_RX, get_val(PS4_RX) - aa_power_current);
-	wait(aa_delay);
-	set_val(PS4_RY, get_val(PS4_RY) - aa_power_current);
-	set_val(PS4_RX, get_val(PS4_RX) - aa_power_current);
-	wait(aa_delay);
-	set_val(PS4_RY, get_val(PS4_RY) - aa_power_current);
-	set_val(PS4_RX, get_val(PS4_RX));
-	wait(aa_delay);
-	set_val(PS4_RY, get_val(PS4_RY) - aa_power_current);
-	set_val(PS4_RX, get_val(PS4_RX) + aa_power_current);
-	wait(aa_delay);
-	set_val(PS4_RY, get_val(PS4_RY));
-	set_val(PS4_RX, get_val(PS4_RX) + aa_power_current);
 	wait(aa_delay);
 }
 
 combo LeftStickRotational {
-	set_val(PS4_LX, get_val(PS4_LX) + ls_power);
+	set_val(PS4_LX, clamp(get_val(PS4_LX) + ls_power, -100, 100));
 	wait(15);
-	set_val(PS4_LX, get_val(PS4_LX) - ls_power);
+	set_val(PS4_LX, clamp(get_val(PS4_LX) - ls_power, -100, 100));
 	wait(15);
 }
 
@@ -444,14 +329,6 @@ combo AutoPing {
 	set_val(PS4_UP, 100);
 	wait(15);
 	set_val(PS4_UP, 0);
-}
-
-combo DirectionalQuickJump {
-	set_val(PS4_LX, jump_state);
-	set_val(PS4_R3, 100);
-	wait(70);
-	set_val(PS4_LX, jump_state);
-	set_val(PS4_R3, 0);
 }
 
 combo RapidFire {
@@ -462,10 +339,6 @@ combo RapidFire {
 }
 
 combo YY_Spam {
-	set_val(PS4_TRIANGLE, 100);
-	wait(15);
-	set_val(PS4_TRIANGLE, 0);
-	wait(15);
 	set_val(PS4_TRIANGLE, 100);
 	wait(15);
 	set_val(PS4_TRIANGLE, 0);
