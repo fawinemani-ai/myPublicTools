@@ -1,0 +1,150 @@
+// ============================================================================
+// ⚽ EA SPORTS FC PRO SCRIPT - PS5 EDITION (ALTERNATIV LAYOUT)
+// ============================================================================
+// Optimiert für die PS5 (DualSense) unter Verwendung der PS5-Eingabe-API.
+// Steuerung "Alternativ": Schießen = Viereck, Flanken = Kreis.
+// ============================================================================
+
+// --- KONFIGURATION ---
+int timed_finishing = TRUE; // Timed Finishing standardmäßig AN.
+int tf_delay = 130;         // Verzögerung in ms für das grüne Finish.
+                            // (Passe diesen Wert je nach Ping und Gameplay-Speed an, 
+                            //  üblich sind 100-160 ms)
+
+// ============================================================================
+// INITIALISIERUNG
+// ============================================================================
+init {
+    // Kurzes Rumble-Feedback beim Starten des Skripts
+    combo_run(Rumble_Feedback);
+    
+    // Optional: Stelle sicher, dass die Vibration auf der PS5 aktiviert ist.
+    // Dies ist eine reine Erinnerung; die tatsächliche Einstellung erfolgt im PS5-Menü.
+    // PS5: Einstellungen -> Zubehör -> Controller -> Vibrationsintensität = Stark.
+}
+
+// ============================================================================
+// HAUPTLOGIK
+// ============================================================================
+main {
+    // -------- 1. INSTA-HAIR TRIGGERS (Schnelleres Sprinten & Jockey) --------
+    // Die Schultertasten reagieren schon bei 5% Berührung mit 100% Leistung.
+    // L2 = Jockey, R2 = Sprint.
+    // Nutzt die PS5-API für maximale Kompatibilität.
+    if (get_val(PS5_L2) > 5) {
+        set_val(PS5_L2, 100);
+    }
+    if (get_val(PS5_R2) > 5) {
+        set_val(PS5_R2, 100);
+    }
+
+    // -------- 2. TIMED FINISHING (Schuss auf VIERECK) --------
+    // Halte Viereck gedrückt, um die Schusskraft aufzuladen.
+    // Sobald du Viereck loslässt, wartet das Skript den perfekten Moment ab
+    // und tippt Viereck automatisch ein zweites Mal an, um das grüne Finish zu treffen.
+    if (timed_finishing) {
+        if (event_release(PS5_SQUARE)) {
+            combo_run(Green_Time);
+        }
+    }
+
+    // -------- 3. TIMED FINISHING EIN-/AUSSCHALTEN --------
+    // L2 (Jockey) gedrückt halten + Steuerkreuz OBEN drücken, um es im Spiel an/aus zu machen.
+    // Ein langes Vibrieren bedeutet AN, ein kurzes (oder keins) bedeutet AUS.
+    // Verwendung von event_press für zuverlässiges Umschalten.
+    if (get_val(PS5_L2)) {
+        if (event_press(PS5_UP)) {
+            timed_finishing = !timed_finishing;
+            combo_run(Rumble_Feedback);
+        }
+    }
+
+    // -------- 4. EASY SKILL MOVES (Auf dem Steuerkreuz) --------
+    // Perfekte Ausführung von wichtigen Skill Moves, ohne den rechten Stick zu berühren.
+    // Steuerkreuz LINKS = Ball Roll nach links
+    if (event_press(PS5_LEFT)) {
+        combo_run(Ball_Roll_Left);
+    }
+    // Steuerkreuz RECHTS = Ball Roll nach rechts
+    if (event_press(PS5_RIGHT)) {
+        combo_run(Ball_Roll_Right);
+    }
+    // Steuerkreuz UNTEN = Stepover (Übersteiger) nach vorne
+    if (event_press(PS5_DOWN)) {
+        combo_run(Step_Over);
+    }
+
+    // -------- 5. OPTIONAL: SCHNELLER BALL ROLL (NEU) --------
+    // Drücke L1 + Steuerkreuz LINKS/RECHTS für einen schnelleren Ball Roll.
+    // Dies kann in hektischen Situationen nützlich sein.
+    if (get_val(PS5_L1)) {
+        if (event_press(PS5_LEFT)) {
+            combo_run(Ball_Roll_Left_Fast);
+        }
+        if (event_press(PS5_RIGHT)) {
+            combo_run(Ball_Roll_Right_Fast);
+        }
+    }
+}
+
+// ============================================================================
+// COMBOS (Abläufe)
+// ============================================================================
+// Grünes Finish (zweites Antippen der Schusstaste Viereck)
+combo Green_Time {
+    wait(tf_delay);
+    set_val(PS5_SQUARE, 100);
+    wait(40);
+    set_val(PS5_SQUARE, 0);
+}
+
+// Ball Roll Links (rechter Stick auf -100X)
+combo Ball_Roll_Left {
+    set_val(PS5_RX, -100);
+    wait(350);
+    set_val(PS5_RX, 0);
+}
+
+// Ball Roll Rechts (rechter Stick auf 100X)
+combo Ball_Roll_Right {
+    set_val(PS5_RX, 100);
+    wait(350);
+    set_val(PS5_RX, 0);
+}
+
+// Schneller Ball Roll Links (für L1 + Links)
+combo Ball_Roll_Left_Fast {
+    set_val(PS5_RX, -100);
+    wait(200); // Kürzere Dauer = schnellere Ausführung
+    set_val(PS5_RX, 0);
+}
+
+// Schneller Ball Roll Rechts (für L1 + Rechts)
+combo Ball_Roll_Right_Fast {
+    set_val(PS5_RX, 100);
+    wait(200);
+    set_val(PS5_RX, 0);
+}
+
+// Schneller Übersteiger nach vorn (Rechter Stick schnelle Halbkreis-Bewegung)
+combo Step_Over {
+    set_val(PS5_RY, -100);
+    set_val(PS5_RX, 0);
+    wait(30);
+    set_val(PS5_RY, -80);
+    set_val(PS5_RX, 40);
+    wait(30);
+    set_val(PS5_RY, -50);
+    set_val(PS5_RX, 80);
+    wait(30);
+    set_val(PS5_RY, 0);
+    set_val(PS5_RX, 100);
+    wait(30);
+}
+
+// Vibrations-Feedback
+combo Rumble_Feedback {
+    set_rumble(RUMBLE_A, 100);
+    wait(200);
+    reset_rumble();
+}
