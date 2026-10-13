@@ -1,346 +1,897 @@
-// ============================================================================
-// 🎮 WARZONE GPC PRO | V12.5 - STICK & MOVE EDITION (FINAL OPTIMIERT)
-// ============================================================================
-int RECOIL_ADS_DELAY = 50;
-int RECOIL_DECAY_MS = 200;
-int AA_RAMP_MS = 180;
-int MAX_AA = 32;
-int MIN_AA = 4;
+//============================================================================
+// ██████╗  ██████╗  ██████╗    ██╗    ██╗ █████╗ ██████╗ ███████╗ ██████╗ ███╗   ██╗███████╗
+// ██╔══██╗██╔════╝ ██╔════╝    ██║    ██║██╔══██╗██╔══██╗╚══███╔╝██╔═══██╗████╗  ██║██╔════╝
+// ██████╔╝██║      ██║         ██║ █╗ ██║███████║██████╔╝  ███╔╝ ██║   ██║██╔██╗ ██║█████╗
+// ██╔═══╝ ██║      ██║         ██║███╗██║██╔══██║██╔══██╗ ███╔╝  ██║   ██║██║╚██╗██║██╔══╝
+// ██║     ╚██████╗ ╚██████╗    ╚███╔███╔╝██║  ██║██║  ██║███████╗╚██████╔╝██║ ╚████║███████╗
+// ╚═╝      ╚═════╝  ╚═════╝     ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+//
+// PS5 WARZONE PRO SCRIPT - "STICK & MOVE" LAYOUT
+// Version: 1.0 FINAL
+//
+// ═══════════════════════════════════════════════════════════════════════════
+//  INHALTSVERZEICHNIS
+// ═══════════════════════════════════════════════════════════════════════════
+//
+//  1. HAUPTFEATURES
+//  2. STEUERUNG / BUTTON-BELEGUNG
+//  3. FUNKTIONEN IM DETAIL
+//     3.1  Slide-Back + Hard Jump (R3)
+//     3.2  Auto Slide-Back bei L2-Release
+//     3.3  Auto Hold Breath (Sniper)
+//     3.4  Melee 1:1 Passthrough
+//     3.5  Aggressive Rapid Fire
+//     3.6  Burst Fire
+//     3.7  Anti-Recoil (V + H)
+//     3.8  Sticky Aim Assist
+//     3.9  Aim Correction (Sensitivity)
+//     3.10 Easy Run / Auto Sprint
+//     3.11 Easy Drop Shot
+//     3.12 Fast Reload Cancel
+//     3.13 Fire Mods Killswitch
+//     3.14 LED Status-Anzeigen
+//  4. CONFIG-ZONE (was du anpassen kannst)
+//  5. TUNING-TIPPS
+//
+// ═══════════════════════════════════════════════════════════════════════════
+//  1. HAUPTFEATURES
+// ═══════════════════════════════════════════════════════════════════════════
+//
+//  ✓ R3 = Rückwärts Slide + Hard Jump (Slide Cancel)
+//  ✓ L2 kurz loslassen während L2+R2 = Auto Slide-Back + Hard Jump
+//  ✓ Auto Hold Breath für Sniper (L3 wird automatisch gedrückt)
+//  ✓ Melee (Cross) 100% 1:1 - wird NIE manipuliert
+//  ✓ Aggressive Rapid Fire (Stufe 1-25)
+//  ✓ Burst Fire (3 Stufen: 200/300/400/600 ms)
+//  ✓ Anti-Recoil Vertikal + Horizontal
+//  ✓ Sticky Aim Assist bei ADS
+//  ✓ Aim Correction (Sensitivity pro Modus)
+//  ✓ Easy Run / Auto Sprint
+//  ✓ Easy Drop Shot
+//  ✓ Fast Reload Cancel
+//  ✓ Fire Mods Killswitch (30s)
+//
+// ═══════════════════════════════════════════════════════════════════════════
+//  2. STEUERUNG / BUTTON-BELEGUNG
+// ═══════════════════════════════════════════════════════════════════════════
+//
+//  HOLD D-PAD DOWN + TAP TRIANGLE   → Script On/Off
+//  R3                                → Slide-Back + Hard Jump
+//  L2 kurz los (nach L2+R2)          → Auto Slide-Back + Hard Jump
+//  ADS + L1 (Tactical)               → Auto Breath toggeln
+//  CIRCLE + OPTIONS                  → Rate of Fire +1 (nur ohne ADS)
+//  CIRCLE + VIEW                     → Rate of Fire -1 (nur ohne ADS)
+//  CIRCLE + D-Pad UP                 → Burst-Stufe 200ms (nur ohne ADS)
+//  CIRCLE + D-Pad RIGHT              → Burst-Stufe 300ms (nur ohne ADS)
+//  CIRCLE + D-Pad DOWN               → Burst-Stufe 400ms (nur ohne ADS)
+//  CIRCLE + D-Pad LEFT               → Burst-Stufe 600ms (nur ohne ADS)
+//  CIRCLE + SQUARE (long >600ms)     → Config speichern
+//  D-Pad LEFT (kurz)                 → Killstreak-Switch
+//
+// ═══════════════════════════════════════════════════════════════════════════
+//  3. FUNKTIONEN IM DETAIL
+// ═══════════════════════════════════════════════════════════════════════════
+//
+//  ─── 3.1  SLIDE-BACK + HARD JUMP (R3) ──────────────────────────────────
+//
+//  Drückst du R3, wird folgender Ablauf abgespielt:
+//    1. Linker Stick zieht nach hinten (Rückwärts-Impuls)
+//    2. Slide wird ausgelöst (Circle)
+//    3. Stick zurück auf neutral
+//    4. Hard Jump über R3 (Slide Cancel)
+//    5. Zweiter kurzer Jump-Tap = härterer Abgang
+//
+//  Während der Combo wird der Original-R3-Input unterdrückt, damit
+//  der Charakter nicht sofort springt, sondern erst nach dem Slide.
+//
+//  ─── 3.2  AUTO SLIDE-BACK BEI L2-RELEASE ──────────────────────────────
+//
+//  Beim Zielen/Schießen (L2+R2) passiert folgendes:
+//    • Der Script merkt sich, ob während dieser ADS-Phase geschossen wurde
+//    • Lässt du L2 los UND warst kurz in ADS (< ADS_RELEASE_MAX ms)
+//    • UND hast dabei geschossen → SLIDE_BACK_JUMP wird ausgelöst
+//
+//  Beispiel: Du zielst schnell an, schießt 2 Kugeln, lässt L2 los
+//  → Charakter macht automatisch Slide-Back + Hard Jump
+//
+//  ─── 3.3  AUTO HOLD BREATH (SNIPER) ───────────────────────────────────
+//
+//  Sobald du ADS (L2) hältst, wird nach BREATH_DELAY (Standard 200ms)
+//  automatisch L3 gedrückt = Charakter hält die Luft.
+//  Funktioniert für Sniper perfekt, stört bei anderen Waffen nicht.
+//
+//  Toggle an/aus: ADS + L1
+//
+//  ─── 3.4  MELEE 1:1 PASSTHROUGH ───────────────────────────────────────
+//
+//  Cross (Button 19) = Melee in Stick & Move.
+//  Dieser Button wird im Script an KEINER Stelle manipuliert.
+//  Kein set_val, kein Block, kein Delay → geht 100% 1:1 durch.
+//  Das garantiert instant Nahkampf-Reaktion zu jeder Zeit.
+//
+//  ─── 3.5  AGGRESSIVE RAPID FIRE ───────────────────────────────────────
+//
+//  Automatisches Abfeuern bei Dauerfeuer-Waffen.
+//  Rate of Fire 1-25 (Standard 12).
+//  Je höher der Wert, desto schneller die Schussfolge.
+//
+//  Formel: hold_time = 500 / RATE_OF_FIRE
+//  Minimum: 15ms (verhindert zu schnelles Feuern)
+//
+//  ─── 3.6  BURST FIRE ──────────────────────────────────────────────────
+//
+//  Statt Dauerfeuer: Feuer-Stoß mit Pause.
+//  Stufen: 200ms / 300ms / 400ms / 600ms Haltezeit
+//  Rest-Pause: 50ms
+//
+//  ─── 3.7  ANTI-RECOIL (V + H) ─────────────────────────────────────────
+//
+//  Zieht den rechten Stick automatisch nach unten + zur Seite
+//  um den Rückstoß der Waffe auszugleichen.
+//
+//  ANTIRECOIL_V = 0-15 (Vertikal) - Standard 8
+//  ANTIRECOIL_H = 0-5  (Horizontal) - Standard 1
+//
+//  Nur aktiv bei FIRE + (RF_KS oder R2F_K2S) + fire__mods_ON.
+//  Wird bei manuellem Stick-Input (abs > 15) unterbrochen.
+//
+//  ─── 3.8  STICKY AIM ASSIST ───────────────────────────────────────────
+//
+//  Bei ADS: Pulsierender Rechts-/Links-Stick-Input (30 Einheiten hin
+//  und her) → hält das Fadenkreuz auf dem Gegner.
+//
+//  Toggle: DOWN + ADS + SQUARE
+//
+//  ─── 3.9  AIM CORRECTION (SENSITIVITY) ────────────────────────────────
+//
+//  Passt die Stick-Sensitivity je nach Modus an:
+//    ADS + FIRE   → ADS_FIRE_SENS (95)
+//    FIRE         → HIP_SENS (100)
+//    ADS          → ADS_SENS (95)
+//    Neutral      → GEN_SENS (100)
+//
+//  Toggle: DOWN + ADS + R2
+//
+//  ─── 3.10 EASY RUN / AUTO SPRINT ──────────────────────────────────────
+//
+//  Drückst du den linken Stick nach vorne (LY < -5) und bist nicht in
+//  ADS, wird SPRINT automatisch ausgelöst.
+//  → Kein manuelles L3-Drücken mehr nötig.
+//
+//  ─── 3.11 EASY DROP SHOT ──────────────────────────────────────────────
+//
+//  Kurzer Tap auf R3 (< 200ms) → automatischer Drop Shot (Prone).
+//  Wird über eine Combo ausgeführt, damit die Prone-Animation
+//  vollständig durchläuft.
+//
+//  ─── 3.12 FAST RELOAD CANCEL ──────────────────────────────────────────
+//
+//  RELOAD + FIRE gleichzeitig → Weapon-Swap-Cancel:
+//    1. Warten bis Reload-Animation halb durch ist
+//    2. Triangle doppelt tappen = Swap zu Sekundär und zurück
+//  → Reload-Animation wird abgebrochen, Waffe wieder feuerbereit
+//
+//  ─── 3.13 FIRE MODS KILLSWITCH ────────────────────────────────────────
+//
+//  Beim D-Pad-Left-Killstreak-Switch wird, falls Fire-Mods aktiv sind,
+//  für 30 Sekunden alle Fire-Mods (Rapid Fire, Anti-Recoil) deaktiviert.
+//  LED blinkt zur Anzeige.
+//
+//  ─── 3.14 LED STATUS-ANZEIGEN ─────────────────────────────────────────
+//
+//  Weiß    = Primary Weapon + Rapid Fire (Autofire = Rapid)
+//  Gelb    = Primary Weapon + Rapid Fire (Autofire = Burst)
+//  Rot     = Secondary Weapon + Rapid Fire aktiv
+//  Pink    = Sticky Aim aktiv + ADS
+//  Grün    = Auto Breath aktiv + ADS
+//  Rot     = Rate of Fire außerhalb 2-24
+//  Off     = Script aus
+//
+// ═══════════════════════════════════════════════════════════════════════════
+//  4. CONFIG-ZONE
+// ═══════════════════════════════════════════════════════════════════════════
+//============================================================================
+//---------------------------/ USER CONFIG -----------------------------------
+//--- SLIDE CANCEL JUMP (R3) ---
+int SCJ_ENABLED = TRUE; // FALSE = Slide-Back Feature aus
+define SCJ_TRIGGER = 5; // 5 = R3 (Trigger)
+define SCJ_SLIDE_BTN = 18; // 18 = Circle (Slide-Button)
+define SCJ_JUMP_BTN = 5; // 5 = R3 (Jump-Button in Stick & Move)
 
-// Anti-Recoil
-int cur_rv = 16;
-int cur_rv_max = 34;
-int cur_rh = 2;
-int cur_rcr = 6;
+int SCJ_BACK_PULL = 85; // Wie stark Stick nach hinten (0-100)
+int SCJ_BACK_MS = 35; // Dauer des Rückwärts-Impulses
+int SCJ_SLIDE_MS = 110; // Slide-Dauer
+int SCJ_GAP_MS = 25; // Pause Slide → Jump
+int SCJ_JUMP_MS = 100; // Jump-Haltedauer
+int SCJ_HARD_MS = 70; // Zweiter Jump-Tap Dauer
 
-// Aim Assist
-int aa_base = 14;
-int aa_bias = 0;
-int aa_delay = 18;
-int ls_power = 12;
-int hs_bias = 3;
+//--- AUTO SLIDE-BACK BEI L2-RELEASE ---
+int ADS_RELEASE_SLIDE = TRUE; // FALSE = Feature aus
+int ADS_RELEASE_MAX = 250; // L2 muss kürzer als X ms gehalten sein
+int ADS_FIRE_MIN = 60; // FIRE muss mind. X ms gedrückt gewesen sein
 
-// Movement
-int strafe_power = 8;
-int bhop_delay = 130;
+//--- AUTO HOLD BREATH ---
+int AUTO_BREATH = TRUE; // FALSE = aus
+int BREATH_DELAY = 200; // ms nach ADS bis Breath startet
+int BREATH_HOLD = 100; // Stärke des L3-Drucks
 
-// Laufzeit
-int active_recoil = 0;
-int final_recoil = 0;
-int recoil_elapsed = 0;
-int recoil_curve_bonus = 0;
-int aa_power_current = 0;
-int last_recoil_active = 0;
-int recoil_decay_t = 0;
-int tmp_pct = 0;
-int tmp_decay = 0;
-int ads_time = 0;
-int ramp = 0;
-int hs_ry = 0;
-int rnd_seed = 0;
-int last_circle_time = 0;
+//--- MELEE 1:1 (wird nie manipuliert) ---
+define MELEE_BTN = 19; // 19 = Cross
 
+//--- COMBAT FEATURES ---
+int AIM__INVERTED = FALSE; // TRUE bei Inverted Aim
+int EASY__RUN = TRUE; // Auto Sprint
+int EASY__DROP = TRUE; // Auto Drop Shot
+int FAST_RELOAD = TRUE; // Fast Reload Cancel
+
+int ANTIRECOIL_V = 8; // Anti-Recoil Vertikal (0-15)
+int ANTIRECOIL_H = 1; // Anti-Recoil Horizontal (0-5)
+
+int STICKY__AIM = TRUE; // Sticky Aim Assist
+int AIM__CORRECT = TRUE; // Aim Correction
+int VIBRATION = 30; // Rumble-Stärke bei Events
+
+int ADS_SENS = 95; // Sensitivity bei ADS
+int GEN_SENS = 100; // Sensitivity generell
+int HIP_SENS = 100; // Sensitivity bei Fire ohne ADS
+int ADS_FIRE_SENS = 95; // Sensitivity bei ADS + Fire
+
+define KILL__STREAK__SW = 15; // D-Pad Left = Killstreak-Switch
+
+//---------------------------/ END USER CONFIG ------------------------------
+//---------------------------/ PS5 CONTROLS ---------------------------------
+define HOME = 0;
+define VIEW = 1; // Touchpad-Share
+define OPTIONS = 2; // Options
+define LETHAL = 3; // R1
+define FIRE = 4; // R2
+define PRONE = 5; // R3
+define TACTICAL = 6; // L1
+define ADS = 7; // L2
+define SPRINT = 8; // L3
+define RX = 9;
+define RY = 10;
+define LX = 11;
+define LY = 12;
+define UP = 13;
+define DOWN = 14;
+define LEFT = 15;
+define RIGHT = 16;
+define TRIANGLE = 17;
+define CIRCLE = 18;
+define CROSS = 19;
+define SQUARE = 20;
+
+// Aliases (lesbare Namen)
+define SW_WEAPON = 17; // Triangle
+define RELOAD = 20; // Square
+define MELEE = 18; // Circle
+define JUMP = 19; // Cross
+
+//---------------------------/ LED FARBEN -----------------------------------
+define LED_OFF = 0;
+define LED_GREEN = 1;
+define LED_BLUE = 2;
+define LED_PINK = 3;
+define LED_RED = 4;
+define LED_SKYBLUE = 5;
+define LED_YELLOW = 6;
+define LED_WHITE = 7;
+
+data(0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2,
+     0, 2, 0, 0, 2, 0, 2, 0, 0, 2, 2, 0, 2, 2, 2, 2);
+
+//---------------------------/ VARIABLES ------------------------------------
+int hold_time = 35;
+int rest_time = 5;
+int PrimaryWeapon = TRUE;
+int RF_KS = FALSE;
+int R2F_K2S = FALSE;
+int Secondary = FALSE;
+int RATE_OF_FIRE;
+int fire__mods_ON = TRUE;
+int Fire_KS = FALSE;
+int autofire = 1;
+int hold_burst = 200;
+int rest_burst = 50;
+int rumble = 0;
+int Script_onoff = FALSE;
+int sens = 100;
+
+int scj_lock = FALSE; // Lock während Slide-Back-Combo
+int ads_was_firing = FALSE; // Merker ob während ADS gefeuert wurde
+
+//---------------------------/ INIT -----------------------------------------
 init {
-	update_feedback();
+	RATE_OF_FIRE = get_pvar(SPVAR_1, 1, 25, 12);
 }
 
+//---------------------------/ MAIN BLOCK -----------------------------------
 main {
-	// -------- 1. Hair Triggers --------
-	if (get_val(PS4_L2) > 5) {
-		set_val(PS4_L2, 100);
+	set_val(TRACE_1, RATE_OF_FIRE);
+
+	//====================================================================
+	// SCRIPT ON / OFF
+	//====================================================================
+	if (get_val(DOWN) && event_press(SW_WEAPON)) {
+		Script_onoff = !Script_onoff;
 	}
 
-	if (get_val(PS4_R2) > 5) {
-		set_val(PS4_R2, 100);
+	if (get_val(DOWN)) {
+		set_val(SW_WEAPON, 0);
 	}
 
-	// -------- 2. AA-Bias Tuning --------
-	if (get_val(PS4_L2)) {
-		if (event_press(PS4_UP)) {
-			aa_bias = clamp(aa_bias + 2, -10, 18);
-			update_feedback();
+	if (Script_onoff) {
+		color_led(LED_OFF);
+	}
+
+	if (!Script_onoff) {
+		//================================================================
+		// AGGRESSIVE RATE OF FIRE BERECHNUNG
+		//================================================================
+		hold_time = 500 / RATE_OF_FIRE;
+
+		if (hold_time < 15) {
+			hold_time = 15;
 		}
 
-		if (event_press(PS4_DOWN)) {
-			aa_bias = clamp(aa_bias - 2, -10, 18);
-			update_feedback();
-		}
-	}
+		rest_time = hold_time / 4;
 
-	// -------- 3. Reset --------
-	if (get_val(PS4_TOUCH) && event_press(PS4_TRIANGLE)) {
-		aa_bias = 0;
-		update_feedback();
-	}
-
-	// -------- 4. Y-Y Spam --------
-	if (get_val(PS4_RIGHT)) {
-		combo_run(YY_Spam);
-	}
-	else if (combo_running(YY_Spam)) {
-		combo_stop(YY_Spam);
-	}
-
-	// -------- 5. Anti-Recoil (Optimiert) --------
-	if (get_val(PS4_L2) && get_val(PS4_R2) && get_ptime(PS4_R2) > RECOIL_ADS_DELAY) {
-		last_recoil_active = 1;
-		recoil_decay_t = 0;
-		recoil_elapsed = get_ptime(PS4_R2);
-		recoil_curve_bonus = (recoil_elapsed * recoil_elapsed) / 3000;
-
-		if (recoil_curve_bonus > 15) {
-			recoil_curve_bonus = 15;
+		if (rest_time < 3) {
+			rest_time = 3;
 		}
 
-		active_recoil = cur_rv + (recoil_elapsed / 100) * cur_rcr + recoil_curve_bonus;
-
-		if (active_recoil > cur_rv_max) {
-			active_recoil = cur_rv_max;
+		if (rest_time > 20) {
+			rest_time = 20;
 		}
 
-		if (abs(get_val(PS4_RY)) < 40 && abs(get_val(PS4_RX)) < 40) {
-			final_recoil = clamp(get_val(PS4_RY) + active_recoil, -100, 100);
-			set_val(PS4_RY, final_recoil);
+		//================================================================
+		// AUTO HOLD BREATH (SNIPER)
+		// L3 wird automatisch gehalten während ADS
+		//================================================================
+		if (AUTO_BREATH && get_val(ADS) && get_ptime(ADS) > BREATH_DELAY) {
+			set_val(SPRINT, BREATH_HOLD);
+		}
 
-			if (cur_rh > 0) {
-				rnd_seed = (rnd_seed + 7) % 100;
+		//================================================================
+		// AUTO SLIDE-BACK BEI L2-RELEASE
+		// Logik:
+		//   1. ADS + FIRE aktiv → ads_was_firing = TRUE
+		//   2. L2 losgelassen → wenn kurz + gefeuert → Combo
+		//================================================================
+		if (get_val(ADS) && get_val(FIRE) && get_ptime(FIRE) > ADS_FIRE_MIN) {
+			ads_was_firing = TRUE;
+		}
 
-				if (rnd_seed > 50) {
-					set_val(PS4_RX, clamp(get_val(PS4_RX) + cur_rh, -100, 100));
+		if (event_release(ADS)) {
+			if (ADS_RELEASE_SLIDE && ads_was_firing && get_ptime(ADS) < ADS_RELEASE_MAX && !scj_lock && !combo_running(SLIDE_BACK_JUMP)) {
+				scj_lock = TRUE;
+				combo_run(SLIDE_BACK_JUMP);
+			}
+
+			ads_was_firing = FALSE;
+		}
+
+		//================================================================
+		// MENÜ-BEREICH (ADS + CIRCLE)
+		//================================================================
+		if (get_val(ADS) && !get_val(MELEE)) {
+			if (get_val(VIEW) && get_ptime(VIEW) > 600) {
+				RESET_Defaults();
+			}
+
+			// Auto Breath Toggle
+			if (event_press(TACTICAL)) {
+				AUTO_BREATH = !AUTO_BREATH;
+				rumble = 2;
+			}
+
+			// Secondary Weapon
+			if (event_press(UP)) {
+				PrimaryWeapon = TRUE;
+				RF_KS = FALSE;
+				R2F_K2S = TRUE;
+				Secondary = TRUE;
+				Fire_KS = FALSE;
+				rumble = 2;
+			}
+
+			// Primary Weapon
+			if (event_press(DOWN)) {
+				PrimaryWeapon = TRUE;
+				RF_KS = FALSE;
+				R2F_K2S = FALSE;
+				Secondary = FALSE;
+				Fire_KS = FALSE;
+				rumble = 2;
+			}
+
+			// Rapid Fire ON
+			if (event_release(RIGHT)) {
+				PrimaryWeapon = TRUE;
+				RF_KS = TRUE;
+				R2F_K2S = TRUE;
+				Secondary = FALSE;
+				Fire_KS = TRUE;
+				rumble = 2;
+			}
+
+			// Fire-Mode Switch
+			if (get_val(RIGHT)) {
+				if (event_release(VIEW)) {
+					autofire = 1;
 				}
-				else {
-					set_val(PS4_RX, clamp(get_val(PS4_RX) - cur_rh, -100, 100));
+				else if (event_release(OPTIONS)) {
+					autofire = 2;
+				}
+			}
+
+			set_val(VIEW, 0);
+			set_val(OPTIONS, 0);
+		}
+
+		//================================================================
+		// TOGGLES (DOWN + ADS)
+		//================================================================
+		if (get_val(DOWN) && get_val(ADS)) {
+			if (event_press(FIRE)) {
+				AIM__CORRECT = !AIM__CORRECT;
+				rumble = 2;
+			}
+
+			if (event_press(RELOAD)) {
+				STICKY__AIM = !STICKY__AIM;
+				rumble = 2;
+			}
+
+			set_val(DOWN, 0);
+			set_val(RELOAD, 0);
+			set_val(JUMP, 0);
+			set_val(MELEE, 0);
+			set_val(SW_WEAPON, 0);
+		}
+
+		//================================================================
+		// RATE OF FIRE ANPASSEN (CIRCLE + OPTIONS/VIEW)
+		//================================================================
+		if (get_val(MELEE) && event_press(OPTIONS)) {
+			RATE_OF_FIRE++;
+		}
+
+		if (get_val(MELEE) && get_val(OPTIONS)) {
+			set_val(OPTIONS, 0);
+		}
+
+		if (RATE_OF_FIRE > 25) {
+			RATE_OF_FIRE = 25;
+		}
+
+		if (get_val(MELEE) && event_press(VIEW)) {
+			RATE_OF_FIRE--;
+		}
+
+		if (get_val(MELEE) && get_val(VIEW)) {
+			set_val(VIEW, 0);
+		}
+
+		if (RATE_OF_FIRE < 1) {
+			RATE_OF_FIRE = 1;
+		}
+
+		//================================================================
+		// BURST STUFEN (CIRCLE + D-PAD, ohne ADS)
+		//================================================================
+		if (get_val(MELEE) && !get_val(ADS)) {
+			if (event_press(UP)) {
+				hold_burst = 200;
+			}
+			else if (event_press(RIGHT)) {
+				hold_burst = 300;
+			}
+			else if (event_press(DOWN)) {
+				hold_burst = 400;
+			}
+			else if (event_press(LEFT)) {
+				hold_burst = 600;
+			}
+
+			set_val(UP, 0);
+			set_val(RIGHT, 0);
+			set_val(DOWN, 0);
+			set_val(LEFT, 0);
+		}
+
+		// Save Config
+		if (event_release(MELEE) && get_ptime(MELEE) > 600) {
+			save_pvars();
+		}
+
+		//================================================================
+		// MELEE 1:1 PASSTHROUGH
+		// Cross wird NIE manipuliert - 100% direkte Weiterleitung
+		//================================================================
+		//================================================================
+		// EASY DROP SHOT (kurzer R3-Tap)
+		//================================================================
+		if (EASY__DROP) {
+			if (event_release(PRONE) && get_ptime(PRONE) < 200) {
+				combo_run(DROP_SHOT);
+			}
+		}
+
+		//================================================================
+		// R3: RÜCKWÄRTS SLIDE + HARD JUMP
+		//================================================================
+		if (SCJ_ENABLED && event_press(SCJ_TRIGGER) && !get_val(ADS) && !get_val(DOWN) && !scj_lock) {
+			scj_lock = TRUE;
+			combo_run(SLIDE_BACK_JUMP);
+		}
+
+		// Lock freigeben wenn Combo durch + R3 losgelassen
+		if (scj_lock && !combo_running(SLIDE_BACK_JUMP) && !get_val(SCJ_TRIGGER)) {
+			scj_lock = FALSE;
+		}
+
+		// R3 nur unterdrücken wenn Combo NICHT läuft
+		if (SCJ_ENABLED && scj_lock && !combo_running(SLIDE_BACK_JUMP)) {
+			set_val(SCJ_TRIGGER, 0);
+		}
+
+		//================================================================
+		// ANTI-RECOIL
+		//================================================================
+		if (get_val(FIRE) && (RF_KS || R2F_K2S) && fire__mods_ON) {
+			combo_run(ANTI_RECOIL);
+		}
+		else {
+			combo_stop(ANTI_RECOIL);
+		}
+
+		//================================================================
+		// AIM CORRECTION
+		//================================================================
+		if (AIM__CORRECT) {
+			Aim__Correction();
+		}
+
+		//================================================================
+		// EASY RUN
+		//================================================================
+		if (EASY__RUN && get_val(LY) < -5 && !get_val(ADS)) {
+			combo_run(EASY_RUN);
+		}
+
+		//================================================================
+		// RAPID FIRE / BURST FIRE
+		//================================================================
+		if (PrimaryWeapon && RF_KS && fire__mods_ON && get_val(FIRE)) {
+			if (autofire == 1) {
+				combo_run(RAPID_FIRE);
+			}
+			else if (autofire == 2) {
+				combo_run(BURST_FIRE);
+			}
+		}
+
+		if (!PrimaryWeapon && R2F_K2S && fire__mods_ON && get_val(FIRE)) {
+			combo_run(RAPID_FIRE);
+		}
+
+		//================================================================
+		// FAST RELOAD CANCEL
+		//================================================================
+		if (FAST_RELOAD) {
+			if (get_val(RELOAD) && event_press(FIRE)) {
+				combo_run(FAST_RELOAD_CANCEL);
+			}
+		}
+
+		//================================================================
+		// SECONDARY / WEAPON SWITCH
+		//================================================================
+		if (event_release(RELOAD) && get_ptime(RELOAD) > 200 && Secondary) {
+			PrimaryWeapon = TRUE;
+			rumble = 2;
+		}
+
+		if (Secondary) {
+			if (event_release(SW_WEAPON) && get_ptime(SW_WEAPON) < 200 && !get_val(DOWN)) {
+				PrimaryWeapon = !PrimaryWeapon;
+
+				if (!PrimaryWeapon) {
+					rumble = 2;
 				}
 			}
 		}
-	}
-	else if (last_recoil_active) {
-		if (RECOIL_DECAY_MS > 0) {
-			recoil_decay_t = recoil_decay_t + 20;
 
-			if (recoil_decay_t >= RECOIL_DECAY_MS || abs(get_val(PS4_RY)) > 30) {
-				last_recoil_active = 0;
-				recoil_decay_t = 0;
+		//================================================================
+		// STICKY AIM
+		//================================================================
+		if (STICKY__AIM && get_val(ADS)) {
+			combo_run(AA_XY);
+		}
+		else {
+			combo_stop(AA_XY);
+		}
+
+		//================================================================
+		// KILLSTREAK SWITCH
+		//================================================================
+		if (!get_val(MELEE)) {
+			if (event_press(KILL__STREAK__SW) && !get_val(ADS) && get_ptime(KILL__STREAK__SW) < 15) {
+				combo_run(KILL);
 			}
-			else {
-				tmp_pct = 100 - ((recoil_decay_t * 100) / RECOIL_DECAY_MS);
-				tmp_decay = (active_recoil * tmp_pct) / 100;
-
-				if (tmp_decay > 0) {
-					set_val(PS4_RY, clamp(get_val(PS4_RY) + tmp_decay, -100, 100));
-				}
-			}
-		}
-		else {
-			last_recoil_active = 0;
-		}
-	}
-	else {
-		last_recoil_active = 0;
-	}
-
-	// -------- 6. Headshot-Bias --------
-	if (get_val(PS4_L2) && !get_val(PS4_R2)) {
-		hs_ry = get_val(PS4_RY);
-
-		if (hs_ry > -50) {
-			set_val(PS4_RY, clamp(hs_ry - hs_bias, -100, 100));
-		}
-	}
-
-	// -------- 7. Auto-Ping --------
-	if (get_val(PS4_L2) && event_press(PS4_R2)) {
-		combo_run(AutoPing);
-	}
-
-	// -------- 8. Rapid Fire --------
-	if (get_val(PS4_L2) && event_press(PS4_CIRCLE)) {
-		combo_run(RapidFire);
-	}
-
-	// -------- 9. Rotational AA mit Ramp --------
-	if (get_val(PS4_L2)) {
-		ads_time = get_ptime(PS4_L2);
-		ramp = 100;
-
-		if (AA_RAMP_MS > 0 && ads_time < AA_RAMP_MS) {
-			ramp = (ads_time * 100) / AA_RAMP_MS;
 		}
 
-		aa_power_current = clamp(aa_base + aa_bias, MIN_AA, MAX_AA);
-		aa_power_current = (aa_power_current * ramp) / 100;
+		//================================================================
+		// LEDS & RUMBLE
+		//================================================================
+		PLAY__LEDS();
 
-		if (abs(get_val(PS4_RX)) < 30 && abs(get_val(PS4_RY)) < 30) {
-			combo_run(SmoothRotationalAA);
+		if (rumble > 0) {
+			combo_run(RUMBLE);
 		}
-		else {
-			combo_stop(SmoothRotationalAA);
-		}
-
-		if (abs(get_val(PS4_LX)) < 20 && abs(get_val(PS4_LY)) < 20) {
-			combo_run(LeftStickRotational);
-		}
-		else {
-			combo_stop(LeftStickRotational);
-		}
-	}
-	else {
-		combo_stop(SmoothRotationalAA);
-		combo_stop(LeftStickRotational);
-	}
-
-	// -------- 10. Strafe Aim --------
-	if (get_val(PS4_L2) && get_val(PS4_R2)) {
-		combo_run(StrafeAim);
-	}
-	else {
-		combo_stop(StrafeAim);
-	}
-
-	// -------- 11. Snap Aim --------
-	if (event_press(PS4_R3) && get_val(PS4_TOUCH) && !get_val(PS4_L2) && abs(get_val(PS4_RX)) > 40) {
-		combo_run(SnapAim);
-	}
-
-	// -------- 12. Drop Shot --------
-	if (event_press(PS4_R2) && !get_val(PS4_L2) && !get_val(PS4_CIRCLE)) {
-		combo_run(DropShot);
-	}
-
-	// -------- 13. Slide + Jump Chain --------
-	if (event_press(PS4_CIRCLE) && get_val(PS4_LY) < -60) {
-		combo_run(SlideJumpChain);
-	}
-
-	// -------- 14. Slide Cancel --------
-	if (event_press(PS4_CIRCLE)) {
-		if (get_rtime() - last_circle_time < 400) {
-			combo_run(SlideCancel);
-		}
-
-		last_circle_time = get_rtime();
-	}
-
-	// -------- 15. Bunny Hop --------
-	if (get_val(PS4_L3) && get_val(PS4_LY) < -50) {
-		if ((get_rtime() % 4) < 2) {
-			bhop_delay = 128;
-		}
-		else {
-			bhop_delay = 134;
-		}
-
-		combo_run(BunnyHop);
-	}
-	else {
-		combo_stop(BunnyHop);
-	}
-
-	// -------- 16. Auto Sprint --------
-	if (event_press(PS4_L3) && get_val(PS4_LY) < -70) {
-		combo_run(AutoSprint);
 	}
 }
 
-// ============================================================================
-// FEEDBACK
-// ============================================================================
-function update_feedback() {
-	cls_oled(0);
-	print(0, 8, 0, 1, "WARZONE V12.5");
-	print(0, 22, 0, 1, "STICK & MOVE");
-	print(0, 38, 0, 1, "ALL FEATURES: ON");
+//============================================================================
+// COMBO SECTION
+//============================================================================
+//--- SLIDE-BACK + HARD JUMP ---
+// 1. Stick nach hinten (Rückwärts)
+// 2. Slide auslösen (Circle)
+// 3. Stick neutral
+// 4. Hard Jump (R3)
+// 5. Zweiter Jump-Tap für härteren Abgang
+combo SLIDE_BACK_JUMP {
+	set_val(LY, SCJ_BACK_PULL);
+	wait(SCJ_BACK_MS);
+	set_val(SCJ_SLIDE_BTN, 100);
+	wait(SCJ_SLIDE_MS);
+	set_val(SCJ_SLIDE_BTN, 0);
+	set_val(LY, 0);
+	wait(SCJ_GAP_MS);
+	set_val(SCJ_JUMP_BTN, 100);
+	wait(SCJ_JUMP_MS);
+	set_val(SCJ_JUMP_BTN, 0);
+	wait(20);
+	set_val(SCJ_JUMP_BTN, 100);
+	wait(SCJ_HARD_MS);
+	set_val(SCJ_JUMP_BTN, 0);
+	wait(20);
 }
 
-// ============================================================================
-// COMBOS
-// ============================================================================
-combo SlideJumpChain {
-	set_val(PS4_CIRCLE, 100);
-	wait(60);
-	set_val(PS4_CIRCLE, 0);
-	wait(50);
-	set_val(PS4_R3, 100);
-	wait(50);
-	set_val(PS4_R3, 0);
+//--- FAST RELOAD CANCEL ---
+// Triangle doppelt tappen während Reload = Animation Cancel
+combo FAST_RELOAD_CANCEL {
+	wait(120);
+	set_val(SW_WEAPON, 100);
+	wait(40);
+	set_val(SW_WEAPON, 0);
+	wait(40);
+	set_val(SW_WEAPON, 100);
+	wait(40);
+	set_val(SW_WEAPON, 0);
+}
+
+//--- STICKY AIM ---
+// Kleine pulsierende Bewegung auf beiden Sticks = Aim Assist halten
+combo AA_XY {
+	set_val(RY, xy_val(RY, 30));
+	wait(15);
+	set_val(RX, xy_val(RX, 30));
+	set_val(LX, xy_val(LX, 30));
+	wait(15);
+	set_val(RY, xy_val(RY, -30));
+	wait(15);
+	set_val(RX, xy_val(RX, -30));
+	set_val(LX, xy_val(LX, -30));
+	wait(15);
+}
+
+//--- ANTI-RECOIL ---
+// Zieht Stick nach unten (V) und leicht zur Seite (H)
+combo ANTI_RECOIL {
+	if (abs(get_val(RY)) < 15) {
+		if (AIM__INVERTED) {
+			set_val(RY, ANTIRECOIL_V);
+		}
+		else {
+			set_val(RY, 0 - ANTIRECOIL_V);
+		}
+	}
+
+	wait(20);
+
+	if (abs(get_val(RX)) < 15) {
+		set_val(RX, ANTIRECOIL_H);
+	}
+
+	wait(20);
+}
+
+//--- RUMBLE EVENT ---
+combo RUMBLE {
+	set_rumble(RUMBLE_B, 100);
+	wait(150);
+	reset_rumble();
+	wait(150);
+	rumble--;
+}
+
+//--- RAPID FIRE ---
+// Feuer-Puls nach Rate of Fire
+combo RAPID_FIRE {
+	set_val(FIRE, 100);
+	wait(hold_time);
+	set_val(FIRE, 0);
+	wait(rest_time);
+}
+
+//--- BURST FIRE ---
+// Feuer-Stoß mit Pause
+combo BURST_FIRE {
+	set_val(FIRE, 100);
+	wait(hold_burst);
+	set_val(FIRE, 0);
+	wait(rest_burst);
+	set_val(FIRE, 0);
+}
+
+//--- KILLSTREAK SWITCH ---
+combo KILL {
+	if (Fire_KS) {
+		combo_run(NO__FIRE_MOD);
+	}
+
+	wait(40);
+	set_val(SW_WEAPON, 100);
+	wait(400);
+	set_val(SW_WEAPON, 0);
+	wait(40);
+}
+
+//--- KILLSWITCH FÜR FIRE MODS (30s) ---
+combo NO__FIRE_MOD {
+	fire__mods_ON = FALSE;
+	combo_run(BLINK_AR);
+	wait(30000);
+	fire__mods_ON = TRUE;
+	combo_stop(BLINK_AR);
+}
+
+//--- EASY DROP SHOT ---
+combo DROP_SHOT {
+	set_val(PRONE, 100);
+	wait(900);
+}
+
+//--- BLINK-ANIMATION (LED + Rumble) ---
+combo BLINK_AR {
+	wait(350);
+	set_rumble(RUMBLE_B, VIBRATION);
+	color_led(LED_OFF);
 	wait(100);
+	reset_leds();
+	reset_rumble();
 }
 
-combo SlideCancel {
-	set_val(PS4_CIRCLE, 100);
-	wait(45);
-	set_val(PS4_CIRCLE, 0);
+//--- EASY RUN ---
+combo EASY_RUN {
+	set_val(SPRINT, 100);
 	wait(30);
-	set_val(PS4_R3, 100);
-	wait(35);
-	set_val(PS4_R3, 0);
 }
 
-combo BunnyHop {
-	set_val(PS4_R3, 100);
-	wait(45);
-	set_val(PS4_R3, 0);
-	wait(bhop_delay);
+//============================================================================
+// FUNCTIONS
+//============================================================================
+function RESET_Defaults() {
+	RATE_OF_FIRE = 15;
+	ANTIRECOIL_V = 8;
+	rumble = 2;
 }
 
-combo AutoSprint {
-	set_val(PS4_L3, 100);
-	wait(30);
-	set_val(PS4_L3, 0);
+function save_pvars() {
+	set_pvar(SPVAR_1, RATE_OF_FIRE);
+	rumble = 2;
 }
 
-combo DropShot {
-	set_val(PS4_CIRCLE, 100);
-	wait(60);
-	set_val(PS4_CIRCLE, 0);
-	wait(80);
+function Aim__Correction() {
+	if (get_val(FIRE) && get_val(ADS)) {
+		sens = ADS_FIRE_SENS;
+	}
+	else if (get_val(FIRE)) {
+		sens = HIP_SENS;
+	}
+	else if (get_val(ADS)) {
+		sens = ADS_SENS;
+	}
+	else {
+		sens = GEN_SENS;
+	}
+
+	sensitivity(RX, NOT_USE, sens);
+	sensitivity(RY, NOT_USE, sens);
 }
 
-combo StrafeAim {
-	set_val(PS4_LX, clamp(get_val(PS4_LX) + strafe_power, -100, 100));
-	wait(45);
-	set_val(PS4_LX, clamp(get_val(PS4_LX) - strafe_power, -100, 100));
-	wait(45);
+function xy_val(f_axis, f_val) {
+	if (abs(get_val(f_axis)) < 25) {
+		return f_val;
+	}
+
+	return get_val(f_axis);
 }
 
-combo SnapAim {
-	set_val(PS4_RX, clamp(get_val(PS4_RX) + (get_val(PS4_RX) / 2), -100, 100));
-	set_val(PS4_RY, clamp(get_val(PS4_RY) + (get_val(PS4_RY) / 2), -100, 100));
-	wait(25);
+function PLAY__LEDS() {
+	if (PrimaryWeapon && RF_KS && autofire == 1) {
+		color_led(LED_WHITE);
+	}
+
+	if (PrimaryWeapon && RF_KS && autofire == 2) {
+		color_led(LED_YELLOW);
+	}
+
+	if (!PrimaryWeapon && R2F_K2S) {
+		color_led(LED_RED);
+	}
+
+	if (STICKY__AIM && get_val(ADS)) {
+		color_led(LED_PINK);
+	}
+
+	if (RATE_OF_FIRE < 2 || RATE_OF_FIRE > 24) {
+		color_led(LED_RED);
+	}
+
+	if (AUTO_BREATH && get_val(ADS)) {
+		color_led(LED_GREEN);
+	}
 }
 
-combo SmoothRotationalAA {
-	set_val(PS4_RY, clamp(get_val(PS4_RY) + aa_power_current, -100, 100));
-	set_val(PS4_RX, clamp(get_val(PS4_RX) + aa_power_current, -100, 100));
-	wait(aa_delay);
-	set_val(PS4_RY, clamp(get_val(PS4_RY) + aa_power_current, -100, 100));
-	set_val(PS4_RX, get_val(PS4_RX));
-	wait(aa_delay);
+function color_led(colour) {
+	set_led(LED_1, duint8(colour * 4));
+	set_led(LED_2, duint8((colour * 4) + 1));
+	set_led(LED_3, duint8((colour * 4) + 2));
+	set_led(LED_4, duint8((colour * 4) + 3));
 }
-
-combo LeftStickRotational {
-	set_val(PS4_LX, clamp(get_val(PS4_LX) + ls_power, -100, 100));
-	wait(15);
-	set_val(PS4_LX, clamp(get_val(PS4_LX) - ls_power, -100, 100));
-	wait(15);
-}
-
-combo AutoPing {
-	set_val(PS4_UP, 100);
-	wait(15);
-	set_val(PS4_UP, 0);
-}
-
-combo RapidFire {
-	set_val(PS4_R2, 100);
-	wait(35);
-	set_val(PS4_R2, 0);
-	wait(35);
-}
-
-combo YY_Spam {
-	set_val(PS4_TRIANGLE, 100);
-	wait(15);
-	set_val(PS4_TRIANGLE, 0);
-	wait(15);
-}
+//============================================================================
+//  5. TUNING-TIPPS
+//============================================================================
+//
+//  ─── SLIDE-BACK ZU STARK / SCHWACH ───
+//  SCJ_BACK_PULL  = 70   → sanfterer Rückzug
+//  SCJ_BACK_PULL  = 95   → aggressiverer Rückzug
+//
+//  ─── SLIDE DAUER ───
+//  SCJ_SLIDE_MS   = 130  → längerer Slide (rutschiger)
+//  SCJ_SLIDE_MS   = 90   → kürzerer Slide
+//
+//  ─── AUTO-RELEASE LEICHTER TRIGGERN ───
+//  ADS_RELEASE_MAX = 350  → Combo triggert öfter
+//  ADS_RELEASE_MAX = 150  → Combo nur bei sehr kurzem Tap
+//
+//  ─── BREATH FRÜHER / SPÄTER ───
+//  BREATH_DELAY = 100  → Breath startet fast sofort
+//  BREATH_DELAY = 400  → Breath startet verzögert
+//
+//  ─── ANTI-RECOIL STÄRKER ───
+//  ANTIRECOIL_V = 12   → stärkerer vertikaler Ausgleich
+//  ANTIRECOIL_H = 3    → stärkerer horizontaler Ausgleich
+//
+//  ─── RAPID FIRE SCHNELLER (Riskant!) ───
+//  CIRCLE + OPTIONS wiederholt drücken bis RATE_OF_FIRE = 20-25
+//  ACHTUNG: Zu hoch kann das Spiel als Cheat erkennen!
+//
+//  ─── FEATURES KOMPLETT AUSSCHALTEN ───
+//  SCJ_ENABLED        = FALSE  → Slide-Back aus
+//  ADS_RELEASE_SLIDE  = FALSE  → Auto-Release aus
+//  AUTO_BREATH        = FALSE  → Breath aus
+//  EASY__RUN          = FALSE  → Auto Sprint aus
+//  EASY__DROP         = FALSE  → Drop Shot aus
+//  FAST_RELOAD        = FALSE  → Reload Cancel aus
+//  STICKY__AIM        = FALSE  → Sticky Aim aus
+//  AIM__CORRECT       = FALSE  → Aim Correction aus
+//
+//============================================================================
+// END OF SCRIPT
+//============================================================================
