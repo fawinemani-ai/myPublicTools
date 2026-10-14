@@ -1,0 +1,76 @@
+# ==========================================
+# Java / Maven
+# ==========================================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven Specific
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+hs_err_pid*
+replay_pid*
+target/*
+
+# ==========================================
+# IDEs (IntelliJ, Eclipse, VS Code)
+# ==========================================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.metadata/
+bin/
+
+# VS Code
+.vscode/
+
+# ==========================================
+# OS Generated Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================
+# SnapStream AI (App-spezifische Dateien)
+# ==========================================
+# Konfigurationen (enthält sensible API-Keys!)
+config.properties
+
+# Lokale Laufzeit-Caches
+processed_files.json
+processed_files.tmp
+question_cache.properties
+question_cache.tmp
+
+# Überwachungs- und Ausgabeordner (falls sie im Projektverzeichnis liegen)
+screenshots/
+erledigt/
