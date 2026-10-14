@@ -7,93 +7,86 @@ from datetime import datetime
 from dotenv import load_dotenv
 from PIL import Image, ImageChops, ImageStat
 
-# Umgebungsvariablen laden
 load_dotenv("config.env")
 
 SAVE_FOLDER = os.getenv("SAVE_FOLDER", "./captures")
 DIFFERENCE_THRESHOLD = float(os.getenv("DIFFERENCE_THRESHOLD", "1.5"))
 
 def get_image_difference(img1, img2):
-    """Berechnet die durchschnittliche Pixelabweichung zur Erkennung von Inhaltsänderungen."""
+    """Berechnet die durchschnittliche Pixelabweichung."""
     if img1 is None or img2 is None:
         return float('inf')
     diff = ImageChops.difference(img1, img2)
     stat = ImageStat.Stat(diff)
     return stat.mean[0]
 
-def get_active_chrome_bbox():
-    """Prüft über Windows-APIs, ob Google Chrome das aktive Vordergrundfenster ist."""
+def get_active_window_bbox():
+    """Ermittelt unauffällig das aktive Fenster."""
     try:
         hwnd = ctypes.windll.user32.GetForegroundWindow()
-        if not hwnd:
-            return None
-            
-        pid = wintypes.DWORD()
-        ctypes.windll.user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-        
-        PROCESS_QUERY_INFORMATION = 0x0400
-        PROCESS_VM_READ = 0x0010
-        h_process = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pid.value)
-        
-        if h_process:
-            buf_size = 260
-            filename = ctypes.create_unicode_buffer(buf_size)
-            if ctypes.windll.psapi.GetModuleFileNameExW(h_process, None, filename, buf_size):
-                ctypes.windll.kernel32.CloseHandle(h_process)
-                exe_path = filename.value
-                
-                if "chrome.exe" in exe_path.lower():
-                    rect = wintypes.RECT()
-                    ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect))
-                    
-                    width = rect.right - rect.left
-                    height = rect.bottom - rect.top
-                    
-                    if width > 300 and height > 300:
-                        return {
-                            'left': max(0, rect.left),
-                            'top': max(0, rect.top),
-                            'width': width,
-                            'height': height
-                        }
-            ctypes.windll.kernel32.CloseHandle(h_process)
+        if hwnd:
+            rect = wintypes.RECT()
+            ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect))
+            width = rect.right - rect.left
+            height = rect.bottom - rect.top
+            if width > 100 and height > 100:
+                return {
+                    'left': max(0, rect.left),
+                    'top': max(0, rect.top),
+                    'width': width,
+                    'height': height
+                }
     except Exception:
         pass
-        
     return None
 
-def start_capture(interval=2):
+def start_smart_capture(check_interval=1, stable_delay=2):
+    """
+    check_interval: Prüft jede Sekunde im Hintergrund.
+    stable_delay: Wartet, bis das Bild X Sekunden lang stillsteht, bevor es speichert.
+    """
     os.makedirs(SAVE_FOLDER, exist_ok=True)
-    previous_compare_image = None
+    last_saved_image = None
+    previous_image = None
+    last_change_time = time.time()
     
     with mss.mss() as sct:
         while True:
-            bbox = get_active_chrome_bbox()
-            
-            if bbox:
-                try:
+            try:
+                bbox = get_active_window_bbox()
+                if bbox:
                     sct_img = sct.grab(bbox)
-                    
                     current_image = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
                     compare_image = current_image.resize((400, 300)).convert("L")
                     
-                    diff_score = get_image_difference(previous_compare_image, compare_image)
+                    # Prüfen, ob sich gerade etwas ändert (z.B. beim Scrollen)
+                    diff_score = get_image_difference(previous_image, compare_image)
+                    previous_image = compare_image
+                    
+                    current_time = time.time()
                     
                     if diff_score > DIFFERENCE_THRESHOLD:
-                        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                        filepath = os.path.join(SAVE_FOLDER, f"capture_{timestamp}.jpg")
-                        
-                        # Als JPEG (.jpg) speichern
-                        current_image.save(filepath, "JPEG", quality=90)
-                        
-                        # Google Drive Sync manuell anstupfen (File-Touch / Metadaten-Update)
-                        os.utime(filepath, None)
-                        
-                        previous_compare_image = compare_image
-                except Exception:
-                    pass
+                        # Es wird noch gescrollt / bewegt -> Timer zurücksetzen
+                        last_change_time = current_time
+                    else:
+                        # Bild steht still. Prüfen, ob es lang genug stillsteht UND ob es ein neues Bild ist
+                        if (current_time - last_change_time >= stable_delay):
+                            
+                            # Jetzt prüfen, ob sich das stationäre Bild vom letzten *gespeicherten* unterscheidet
+                            save_diff = get_image_difference(last_saved_image, compare_image)
+                            
+                            if save_diff > DIFFERENCE_THRESHOLD:
+                                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                                filepath = os.path.join(SAVE_FOLDER, f"capture_{timestamp}.jpg")
+                                
+                                current_image.save(filepath, "JPEG", quality=90)
+                                os.utime(filepath, None) # Hält den Cloud-Sync frisch
+                                
+                                last_saved_image = compare_image
+            except Exception:
+                pass
             
-            time.sleep(interval)
+            time.sleep(check_interval)
 
 if __name__ == "__main__":
-    start_capture(interval=2)
+    start_smart_capture()
