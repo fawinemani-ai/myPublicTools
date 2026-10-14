@@ -1,0 +1,7 @@
+Analysiere die MC-Fragen im Screenshot. Nutze bei Bedarf den Kontext aus den verknüpften Notebooks (Recherche und Evaluation, ILM, Modul 2 Wissenschaft und Gesellschaft). 
+Gib für jede gefundene Frage exakt die Frage und die präzise richtige Antwort(en) aus. 
+Format pro Frage:
+Frage: [Text]
+Antwort: [Richtige Option(en)]
+
+Keine Erklärungen, kein Rechenweg, keine Floskeln. Wenn keine Frage im Screenshot existiert, antworte exakt mit: none
