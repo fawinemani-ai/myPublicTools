@@ -1,12 +1,12 @@
 //============================================================================
-// PS5 WARZONE PRO SCRIPT - "PLUG & PLAY" ULTIMATE OLED EDITION
-// Version: 9.0 - OLED DISPLAY, LIVE-TUNING, RUMBLE RECOIL, SNAKING & MORE
+// PS5 WARZONE PRO SCRIPT - "1v1 DOMINATOR" ULTIMATE OLED EDITION
+// Version: 10.0 - FIXED RECOIL/AA OVERWRITE, R3 JUMP-STABILIZER & FAST TTK
 //============================================================================
 //---------------------------/ PS5 CONTROLS ---------------------------------
 define FIRE = 4; // R2
 define JUMP_R3 = 5; // R3 (Sprungtaste bei Stick & Move)
 define ADS = 7; // L2
-define L3_BTN = 8; // L3 (Taktik-Rutschen + Auto Sprint/Breath)
+define L3_BTN = 8; // L3 (Taktik-Rutschen + Auto Sprint)
 define RX = 9; // Rechter Stick X
 define RY = 10; // Rechter Stick Y
 define LX = 11; // Linker Stick X (Strafe)
@@ -18,34 +18,35 @@ define RIGHT = 16; // D-Pad Rechts (Live-Tuning Horizontal)
 define SW_WEAPON = 17; // Dreieck (Waffenwechsel & Easy Plate)
 define CIRCLE = 18; // Kreis (Taktik-Rutschen / Drop-Shot / Snaking)
 define CROSS = 19; // X (Nahkampf bei Stick & Move)
-define RELOAD = 20; // Viereck (Nachladen)
+define RELOAD = 20; // Viereck (Nachladen / Rapid-Fire Toggle mit L2)
 
 //---------------------------/ STANDARD-PROFI-WERTE -------------------------
 // --- PROFIL 1: MP (MASCHINENPISTOLE - PRIMÄR / GRÜN) ---
-define DEF_SMG_V = 13; // Standard-Rückstoß Vertikal für MPs
-define DEF_SMG_H = 0; // Standard-Rückstoß Horizontal für MPs
-define SMG_KICK_BOOST = 4; // Stufe 1: Extra-Ausgleich erste 250ms
-define SMG_SUSTAIN_DAMP = 2; // Stufe 3: Entlastung ab 850ms Dauerfeuer
-define SMG_AA_ADS = 13; // Weicher Magnetismus beim Zielen
-define SMG_AA_FIRE = 16; // Starker Lock-On im Nahkampf
-define SMG_STRAFE_TIME = 155; // Schnelles Links/Rechts im Nahkampf
+define DEF_SMG_V = 15; // Echter, konstanter Vertikal-Halt für MPs
+define DEF_SMG_H = 0; // Horizontal-Ausgleich für MPs
+define SMG_KICK_BOOST = 4; // Fängt den ersten Schuss-Kick (0-220ms) sofort ab
+define SMG_SUSTAIN_DAMP = 2; // Sanfte Glättung ab 850ms Dauerfeuer
+define SMG_AA_ADS = 13; // Starker Magnetismus beim Zielen
+define SMG_AA_FIRE = 15; // Klebt im 1v1 auf der Hitbox ohne zu zittern
+define SMG_STRAFE_TIME = 160; // Schneller Micro-Strafe für Rotational AA
 
 // --- PROFIL 2: STURMGEWEHR (AR - SEKUNDÄR / BLAU) ---
-define DEF_AR_V = 19; // Standard-Rückstoß Vertikal für ARs
-define DEF_AR_H = 0; // Standard-Rückstoß Horizontal für ARs
-define AR_KICK_BOOST = 5; // Stufe 1: Extra-Ausgleich erste 280ms
-define AR_SUSTAIN_DAMP = 3; // Stufe 3: Stabilisierung ab 950ms Dauerfeuer
-define AR_AA_ADS = 10; // Ruhiges Fadenkreuz auf weite Distanz
-define AR_AA_FIRE = 13; // Präziser Halt beim Dauerfeuer
-define AR_STRAFE_TIME = 195; // Ruhigeres Strafe für bessere Präzision
+define DEF_AR_V = 20; // Stärkerer Vertikal-Halt für ARs
+define DEF_AR_H = 0; // Horizontal-Ausgleich für ARs
+define AR_KICK_BOOST = 5; // Fängt den ersten Schuss-Kick (0-250ms) ab
+define AR_SUSTAIN_DAMP = 3; // Glättung ab 950ms Dauerfeuer
+define AR_AA_ADS = 10; // Ruhiges Visier auf Distanz
+define AR_AA_FIRE = 12; // Präzises Laser-Tracking beim Schießen
+define AR_STRAFE_TIME = 200; // Ruhigerer Micro-Strafe
 
-// --- SPEZIAL- & KOMFORT-WERTE ---
-define HIPFIRE_AA = 18; // Maximaler Aim-Assist beim Hüftfeuer (nur R2)
-define HEADSHOT_BOOST = 4; // Sanfter Zug Richtung Kopf in den ersten 160ms
-define STRAFE_STRENGTH = 75; // Optimale Strafe-Stärke
-define AA_SPEED = 16; // Optimiert für 8ms VM-Loop (125Hz Rotation)
+// --- 1v1 KAMPF- & KOMFORT-WERTE ---
+define SNAP_AA_BOOST = 4; // Extra Aim-Lock in den ersten 140ms beim Anvisieren!
+define JUMP_RECOIL_FIX = 3; // Zieht Waffe beim R3-Jump-Shot extra runter (gegen Verreißen)
+define HIPFIRE_AA = 17; // Starker Aim-Assist im Hüftfeuer
+define STRAFE_STRENGTH = 32; // GEFixt: 32 statt 75! Aktiviert AA ohne dein Aim zu verreißen
+define AA_SPEED = 16; // 125Hz Timing (Vielfaches von 8ms)
 define PING_COOLDOWN = 2500; // 2,5 Sek. Pause zwischen Auto-Pings
-define DEADZONE_MIN = 5; // Filtert leichten Stick-Drift im Ruhezustand
+define DEADZONE_MIN = 5; // Filtert Stick-Drift im Ruhezustand
 
 //---------------------------/ LED FARBEN -----------------------------------
 define LED_OFF = 0;
@@ -61,26 +62,32 @@ data(0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2,
      0, 2, 0, 0, 2, 0, 2, 0, 0, 2, 2, 0, 2, 2, 2, 2);
 
 //---------------------------/ OLED STRINGS ---------------------------------
-const string TXT_TITLE = "WARZONE PRO v9.0";
-const string TXT_SMG = "MP (PRIMAER)";
-const string TXT_AR = "AR (SEKUNDAER)";
+const string TXT_TITLE = "1v1 PRO v10.0";
+const string TXT_SMG = "MP (VOLLAUTO)";
+const string TXT_AR = "AR (VOLLAUTO)";
+const string TXT_RF_ON = "RAPID FIRE: AN";
 const string TXT_PLATE = ">> EASY PLATE <<";
 const string TXT_VERT = "Recoil V:";
 const string TXT_HORIZ = "Recoil H:";
 
 //---------------------------/ VARIABLES ------------------------------------
 int is_ar_profile = FALSE; // FALSE = MP (Grün), TRUE = Sturmgewehr (Blau)
+int rapid_fire_on = FALSE; // Standard AUS (Vollauto ist schneller für MP/AR!)
 int smg_recoil_v;
 int smg_recoil_h;
 int ar_recoil_v;
 int ar_recoil_h;
-int cur_recoil_v = 13;
+int cur_recoil_v = 15;
 int cur_recoil_h = 0;
 int cur_aa_size = 13;
-int cur_aa_diag = 9;
-int cur_strafe_t = 155;
-int dynamic_recoil_v = 0;
-int rumble_boost = 0;
+int cur_strafe_t = 160;
+int final_ry_offset = 0;
+int final_rx_offset = 0;
+int aa_step = 0;
+int aa_timer = 0;
+int aa_x = 0;
+int aa_y = 0;
+int jump_stabilizer_timer = 0;
 int current_led = -1;
 int target_led = 0;
 int rumble_cnt = 0;
@@ -133,7 +140,6 @@ main {
 			set_val(LY, 0);
 		}
 
-		// Turn-Assist: Sofortiger 100% Boost beim vollen Umdrehen (>92% Stick)
 		if (get_val(RX) > 92) {
 			set_val(RX, 100);
 		}
@@ -144,10 +150,9 @@ main {
 	}
 
 	//====================================================================
-	// 2. LIVE RECOIL-TUNING IM SPIEL (L2 HALTEN + STEUERKREUZ)
+	// 2. LIVE RECOIL-TUNING & RAPID-FIRE TOGGLE (L2 HALTEN)
 	//====================================================================
 	if (get_val(ADS) && !get_val(FIRE)) {
-		// D-Pad Hoch = Mehr Rückstoß-Ausgleich (zieht stärker nach unten)
 		if (event_press(UP)) {
 			if (!is_ar_profile) {
 				smg_recoil_v = clamp_val(smg_recoil_v + 1, 0, 60);
@@ -159,7 +164,6 @@ main {
 			SAVE_VALUES();
 		}
 
-		// D-Pad Runter = Weniger Rückstoß-Ausgleich
 		if (event_press(DOWN)) {
 			if (!is_ar_profile) {
 				smg_recoil_v = clamp_val(smg_recoil_v - 1, 0, 60);
@@ -171,7 +175,6 @@ main {
 			SAVE_VALUES();
 		}
 
-		// D-Pad Rechts = Korrektur nach Rechts
 		if (event_press(RIGHT)) {
 			if (!is_ar_profile) {
 				smg_recoil_h = clamp_val(smg_recoil_h + 1, -30, 30);
@@ -183,7 +186,6 @@ main {
 			SAVE_VALUES();
 		}
 
-		// D-Pad Links = Korrektur nach Links
 		if (event_press(LEFT)) {
 			if (!is_ar_profile) {
 				smg_recoil_h = clamp_val(smg_recoil_h - 1, -30, 30);
@@ -193,6 +195,13 @@ main {
 			}
 
 			SAVE_VALUES();
+		}
+
+		// Optionaler Rapid-Fire Schalter (für Pistolen/Semis): L2 halten + VIERECK
+		if (event_press(RELOAD)) {
+			rapid_fire_on = !rapid_fire_on;
+			rumble_cnt = 1;
+			oled_update = TRUE;
 		}
 	}
 
@@ -219,6 +228,7 @@ main {
 	//====================================================================
 	if (event_release(SW_WEAPON) && get_ptime(SW_WEAPON) < 250 && plate_timer <= 0) {
 		is_ar_profile = !is_ar_profile;
+		rapid_fire_on = FALSE; // Schaltet beim Wechsel automatisch auf Vollauto zurück
 		rumble_cnt = 1;
 		oled_update = TRUE;
 	}
@@ -244,36 +254,60 @@ main {
 		}
 	}
 
-	// Manuelle Profil-Korrektur: Kurz D-Pad RUNTER drücken (nur außerhalb ADS!)
 	if (event_press(DOWN) && !get_val(ADS) && !get_val(FIRE)) {
 		is_ar_profile = !is_ar_profile;
+		rapid_fire_on = FALSE;
 		rumble_cnt = 1;
 		oled_update = TRUE;
 	}
 
 	//====================================================================
-	// 5. PROFIL-, HEADSHOT- & 3-STUFEN PROGRESSIVE RECOIL-BERECHNUNG
+	// 5. INSTANT HAIR TRIGGERS (0ms Verzögerung beim Zielen & Schießen)
 	//====================================================================
-	// Smart Rumble Check: Prüft ob Waffe echt vibriert (+1 Boost bei echtem Schuss)
-	if (get_rumble(RUMBLE_A) > 10 || get_rumble(RUMBLE_B) > 10) {
-		rumble_boost = 1;
-	}
-	else {
-		rumble_boost = 0;
+	if (get_val(ADS) > 0) {
+		set_val(ADS, 100);
 	}
 
+	if (get_val(FIRE) > 0) {
+		set_val(FIRE, 100);
+
+		if (rapid_fire_on) {
+			combo_run(RAPID_FIRE_MOD);
+		}
+	}
+	else {
+		combo_stop(RAPID_FIRE_MOD);
+	}
+
+	//====================================================================
+	// 6. R3 JUMP-SHOT STABILISATOR (KEIN FEUER-AUSSETZER BEIM SPRINGEN!)
+	//====================================================================
+	// Wenn du im 1v1 R3 drückst: Kein Doppelklick-Bug mehr! Stattdessen
+	// bekommt dein Anti-Recoil für 350ms extra Druck nach unten, damit
+	// dein Fadenkreuz im Sprung exakt auf der Brust des Gegners bleibt!
+	if (event_press(JUMP_R3) && (get_val(ADS) || get_val(FIRE))) {
+		combo_stop(FAST_SLIDE_JUMP);
+		combo_stop(SNAKING_PEEK);
+		scj_lock = FALSE;
+		prone_active = FALSE;
+		jump_stabilizer_timer = 350;
+	}
+
+	if (jump_stabilizer_timer > 0) {
+		jump_stabilizer_timer = jump_stabilizer_timer - get_rtime();
+	}
+
+	//====================================================================
+	// 7. VEREINTE PROFIL-, SNAP-AA & RECOIL-ENGINE (KEIN KONFLIKT MEHR!)
+	//====================================================================
 	if (!is_ar_profile) {
 		// --- MP-MODUS (PRIMÄR) ---
-		cur_recoil_v = smg_recoil_v + rumble_boost;
+		cur_recoil_v = smg_recoil_v;
 		cur_recoil_h = smg_recoil_h;
 
 		if (get_val(FIRE)) {
-			if (get_ptime(FIRE) < 160) {
-				// Sanfter Headshot-Assist in den ersten 160ms
-				cur_recoil_v = (smg_recoil_v + SMG_KICK_BOOST) - HEADSHOT_BOOST;
-			}
-			else if (get_ptime(FIRE) < 280) {
-				cur_recoil_v = smg_recoil_v + SMG_KICK_BOOST;
+			if (get_ptime(FIRE) < 220) {
+				cur_recoil_v = smg_recoil_v + SMG_KICK_BOOST; // Voller Halt beim 1. Schuss!
 			}
 			else if (get_ptime(FIRE) > 850) {
 				cur_recoil_v = smg_recoil_v - SMG_SUSTAIN_DAMP;
@@ -294,16 +328,12 @@ main {
 	}
 	else {
 		// --- STURMGEWEHR-MODUS (SEKUNDÄR) ---
-		cur_recoil_v = ar_recoil_v + rumble_boost;
+		cur_recoil_v = ar_recoil_v;
 		cur_recoil_h = ar_recoil_h;
 
 		if (get_val(FIRE)) {
-			if (get_ptime(FIRE) < 150) {
-				// Sanfter Headshot-Assist in den ersten 150ms
-				cur_recoil_v = (ar_recoil_v + AR_KICK_BOOST) - (HEADSHOT_BOOST / 2);
-			}
-			else if (get_ptime(FIRE) < 300) {
-				cur_recoil_v = ar_recoil_v + AR_KICK_BOOST;
+			if (get_ptime(FIRE) < 250) {
+				cur_recoil_v = ar_recoil_v + AR_KICK_BOOST; // Voller Halt beim 1. Schuss!
 			}
 			else if (get_ptime(FIRE) > 950) {
 				cur_recoil_v = ar_recoil_v - AR_SUSTAIN_DAMP;
@@ -323,7 +353,93 @@ main {
 		}
 	}
 
-	cur_aa_diag = (cur_aa_size * 7) / 10;
+	// SNAP-AIM-BOOST: Erste 140ms beim Anvisieren extra starker Lock-On
+	if (get_val(ADS) && get_ptime(ADS) < 140) {
+		cur_aa_size = cur_aa_size + SNAP_AA_BOOST;
+	}
+
+	// JUMP-SHOT RECOIL FIX: Verhindert Hochziehen der Waffe, wenn du R3 drückst
+	if (jump_stabilizer_timer > 0 && get_val(FIRE)) {
+		cur_recoil_v = cur_recoil_v + JUMP_RECOIL_FIX;
+	}
+
+	// --- MATHEMATISCHE FUSION VON AIM ASSIST + ANTI-RECOIL (OHNE COMBO-LAG!) ---
+	if (get_val(ADS) || get_val(FIRE)) {
+		aa_timer = aa_timer + get_rtime();
+
+		if (aa_timer >= AA_SPEED) {
+			aa_timer = 0;
+			aa_step = (aa_step + 1) % 8;
+		}
+
+		// 8-Wege Diamant-Berechnung direkt im Main-Loop (überschreibt Recoil NICHT!)
+		if (aa_step == 0) {
+			aa_x = 0;
+			aa_y = cur_aa_size;
+		}
+		else if (aa_step == 1) {
+			aa_x = (cur_aa_size * 7) / 10;
+			aa_y = (cur_aa_size * 7) / 10;
+		}
+		else if (aa_step == 2) {
+			aa_x = cur_aa_size;
+			aa_y = 0;
+		}
+		else if (aa_step == 3) {
+			aa_x = (cur_aa_size * 7) / 10;
+			aa_y = ((cur_aa_size * 7) / 10) * -1;
+		}
+		else if (aa_step == 4) {
+			aa_x = 0;
+			aa_y = cur_aa_size * -1;
+		}
+		else if (aa_step == 5) {
+			aa_x = ((cur_aa_size * 7) / 10) * -1;
+			aa_y = ((cur_aa_size * 7) / 10) * -1;
+		}
+		else if (aa_step == 6) {
+			aa_x = cur_aa_size * -1;
+			aa_y = 0;
+		}
+		else if (aa_step == 7) {
+			aa_x = ((cur_aa_size * 7) / 10) * -1;
+			aa_y = (cur_aa_size * 7) / 10;
+		}
+
+		// Dämpft Aim-Assist ab, wenn du den rechten Stick stark bewegst
+		if (abs(get_val(RX)) > 30 || abs(get_val(RY)) > 30) {
+			aa_x = aa_x / 2;
+			aa_y = aa_y / 2;
+		}
+
+		final_rx_offset = aa_x;
+		final_ry_offset = aa_y;
+
+		// Addiert Anti-Recoil sauber auf den Aim-Assist-Wert drauf!
+		if (get_val(FIRE) && reload_timer <= 0) {
+			if (get_val(ADS)) {
+				final_ry_offset = final_ry_offset + cur_recoil_v;
+				final_rx_offset = final_rx_offset + cur_recoil_h;
+			}
+			else {
+				final_ry_offset = final_ry_offset + (cur_recoil_v / 2);
+			}
+		}
+
+		// Setzt den kombinierten Wert ein einziges Mal sauber auf RX und RY
+		if (abs(get_val(RX)) < 85) {
+			set_val(RX, clamp_val(get_val(RX) + final_rx_offset, -100, 100));
+		}
+
+		if (abs(get_val(RY)) < 85) {
+			set_val(RY, clamp_val(get_val(RY) + final_ry_offset, -100, 100));
+		}
+	}
+	else {
+		aa_step = 0;
+		aa_timer = 0;
+	}
+
 	PLAY_LEDS();
 
 	if (oled_update) {
@@ -332,21 +448,10 @@ main {
 	}
 
 	//====================================================================
-	// 6. HAIR TRIGGERS (Sofortiges Zielen & Schießen bei 1% Druck)
+	// 8. FAST RELOAD CANCEL (Notfall-Abbruch beim Nachladen)
 	//====================================================================
-	if (get_val(ADS) > 0) {
-		set_val(ADS, 100);
-	}
-
-	if (get_val(FIRE) > 0) {
-		set_val(FIRE, 100);
-	}
-
-	//====================================================================
-	// 7. FAST RELOAD CANCEL (Notfall-Abbruch beim Nachladen)
-	//====================================================================
-	if (event_press(RELOAD)) {
-		reload_timer = 2100;
+	if (event_press(RELOAD) && !get_val(ADS)) {
+		reload_timer = 2000;
 	}
 
 	if (reload_timer > 0) {
@@ -359,7 +464,7 @@ main {
 	}
 
 	//====================================================================
-	// 8. AUTO-PING GEGNER MARKIEREN (Beim Schießen im ADS)
+	// 9. AUTO-PING GEGNER MARKIEREN (Beim Schießen im ADS)
 	//====================================================================
 	if (ping_timer > 0) {
 		ping_timer = ping_timer - get_rtime();
@@ -371,17 +476,10 @@ main {
 	}
 
 	//====================================================================
-	// 9. AUTO HOLD BREATH (Automatisch Luft anhalten für Visiere)
-	//====================================================================
-	if (get_val(ADS) && get_ptime(ADS) > 140 && abs(get_val(LY)) < 35 && !l3_phys && !circle_phys && !combo_running(SMART_DROP_SHOT) && !combo_running(SNAKING_PEEK)) {
-		set_val(L3_BTN, 100);
-	}
-
-	//====================================================================
-	// 10. AUTO-STRAFE (Mikro-Bewegung beim Schießen im ADS)
+	// 10. MICRO-STRAFE IM GUNFIGHT (Aktiviert Rotational AA ohne Verreißen)
 	//====================================================================
 	if (get_val(ADS) && get_val(FIRE) && !combo_running(SMART_DROP_SHOT) && !prone_active) {
-		if (abs(get_val(LX)) < 45 && abs(get_val(LY)) < 45) {
+		if (abs(get_val(LX)) < 35 && abs(get_val(LY)) < 35) {
 			combo_run(STRAFE_SHOT);
 		}
 		else {
@@ -393,50 +491,9 @@ main {
 	}
 
 	//====================================================================
-	// 11. 8-STEP DIAMOND AIM ASSIST
+	// 11. MOVEMENT: DROP-SHOT, SNAKING & SLIDE-CANCEL
 	//====================================================================
-	if (get_val(ADS) || get_val(FIRE)) {
-		combo_run(DIAMOND_ROTATIONAL_AA);
-	}
-	else {
-		combo_stop(DIAMOND_ROTATIONAL_AA);
-	}
-
-	//====================================================================
-	// 12. SMART DYNAMIC ANTI-RECOIL (Aktiv bei Feuer, pausiert beim Nachladen)
-	//====================================================================
-	if (get_val(FIRE) && reload_timer <= 0) {
-		dynamic_recoil_v = cur_recoil_v - (abs(get_val(RY)) / 6);
-
-		if (dynamic_recoil_v < 0) {
-			dynamic_recoil_v = 0;
-		}
-
-		if (get_val(ADS) && abs(get_val(RY)) < 85) {
-			set_val(RY, clamp_val(get_val(RY) + dynamic_recoil_v, -100, 100));
-
-			if (cur_recoil_h != 0 && abs(get_val(RX)) < 85) {
-				set_val(RX, clamp_val(get_val(RX) + cur_recoil_h, -100, 100));
-			}
-		}
-		else if (!get_val(ADS) && abs(get_val(RY)) < 75) {
-			set_val(RY, clamp_val(get_val(RY) + (dynamic_recoil_v / 2), -100, 100));
-		}
-	}
-
-	//====================================================================
-	// 13. MOVEMENT: JUMP-SHOT, DROP-SHOT, SNAKING & SLIDE-CANCEL
-	//====================================================================
-	// A) Im Gunfight: R3 macht einen einzelnen, sofortigen Jump-Shot
-	if (event_press(JUMP_R3) && (get_val(ADS) || get_val(FIRE))) {
-		combo_stop(FAST_SLIDE_JUMP);
-		combo_stop(SNAKING_PEEK);
-		scj_lock = FALSE;
-		prone_active = FALSE;
-		combo_run(INSTANT_COMBAT_JUMP);
-	}
-
-	// B) Smart Drop-Shot im Feuergefecht (Sobald geschossen wird + L3/Kreis)
+	// A) Smart Drop-Shot im Feuergefecht (Sobald geschossen wird + L3/Kreis)
 	if (slide_pressed && get_val(FIRE)) {
 		combo_stop(FAST_SLIDE_JUMP);
 		combo_stop(STRAFE_SHOT);
@@ -445,8 +502,7 @@ main {
 		combo_run(SMART_DROP_SHOT);
 	}
 
-	// C) NEU: Snaking / Fast Crouch-Peek hinter Deckung!
-	// Wenn du zielst (L2), NICHT schießt und L3/Kreis gehalten wird (>220ms)
+	// B) Snaking / Fast Crouch-Peek hinter Deckung (Zielen + L3/Kreis halten)
 	if (get_val(ADS) && !get_val(FIRE) && (l3_phys || circle_phys) && abs(get_val(LY)) < 40) {
 		if (get_ptime(L3_BTN) > 220 || get_ptime(CIRCLE) > 220) {
 			set_val(CIRCLE, 0);
@@ -457,7 +513,7 @@ main {
 		combo_stop(SNAKING_PEEK);
 	}
 
-	// D) Auto-Stand-Up nach Drop-Shot beim Vorwärtslaufen
+	// C) Auto-Stand-Up nach Drop-Shot beim Vorwärtslaufen
 	if (prone_active && !get_val(ADS) && !get_val(FIRE) && !combo_running(SMART_DROP_SHOT)) {
 		if (get_val(LY) < -75) {
 			prone_active = FALSE;
@@ -468,7 +524,7 @@ main {
 		}
 	}
 
-	// E) Außerhalb des Kampfes beim Laufen: Pro-Slide-Cancel
+	// D) Außerhalb des Kampfes beim Laufen: Pro-Slide-Cancel
 	if (!get_val(ADS) && !get_val(FIRE) && (get_val(LY) < -60 || abs(get_val(LX)) > 70)) {
 		if (slide_pressed && !scj_lock) {
 			scj_lock = TRUE;
@@ -483,7 +539,7 @@ main {
 	}
 
 	//====================================================================
-	// 14. AUTOMATISCHER TAKTIK-SPRINT
+	// 12. AUTOMATISCHER TAKTIK-SPRINT
 	//====================================================================
 	if (get_val(LY) < -75 && !get_val(ADS) && !get_val(FIRE) && !combo_running(FAST_SLIDE_JUMP) && !combo_running(QUICK_STAND_UP) && !l3_phys && !circle_phys) {
 		combo_run(AUTO_TAC_SPRINT);
@@ -493,7 +549,7 @@ main {
 	}
 
 	//====================================================================
-	// 15. VIBRATIONS-FEEDBACK
+	// 13. VIBRATIONS-FEEDBACK
 	//====================================================================
 	if (rumble_cnt > 0 && !combo_running(RUMBLE_FEEDBACK)) {
 		combo_run(RUMBLE_FEEDBACK);
@@ -503,6 +559,14 @@ main {
 //============================================================================
 // COMBOS
 //============================================================================
+// Optionales Rapid Fire (Nur einschalten für Pistolen / Einzelschuss!)
+combo RAPID_FIRE_MOD {
+	set_val(FIRE, 100);
+	wait(24);
+	set_val(FIRE, 0);
+	wait(24);
+}
+
 combo FAST_RELOAD_CANCEL {
 	set_val(SW_WEAPON, 100);
 	wait(32);
@@ -519,7 +583,6 @@ combo SMART_DROP_SHOT {
 	set_val(CIRCLE, 0);
 }
 
-// Schnelles Auf- und Abtauchen hinter einer Deckung (Headglitch Snaking)
 combo SNAKING_PEEK {
 	set_val(CIRCLE, 100);
 	wait(56);
@@ -555,49 +618,6 @@ combo STRAFE_SHOT {
 	wait(cur_strafe_t);
 }
 
-combo DIAMOND_ROTATIONAL_AA {
-	set_val(RY, add_stick(RY, cur_aa_size));
-
-	if (!combo_running(STRAFE_SHOT) && abs(get_val(LX)) < 20) {
-		set_val(LX, 22);
-	}
-
-	wait(AA_SPEED);
-	set_val(RY, add_stick(RY, cur_aa_diag));
-	set_val(RX, add_stick(RX, cur_aa_diag));
-	wait(AA_SPEED);
-	set_val(RX, add_stick(RX, cur_aa_size));
-	wait(AA_SPEED);
-	set_val(RY, add_stick(RY, cur_aa_diag * -1));
-	set_val(RX, add_stick(RX, cur_aa_diag));
-	wait(AA_SPEED);
-	set_val(RY, add_stick(RY, cur_aa_size * -1));
-
-	if (!combo_running(STRAFE_SHOT) && abs(get_val(LX)) < 20) {
-		set_val(LX, -22);
-	}
-
-	wait(AA_SPEED);
-	set_val(RY, add_stick(RY, cur_aa_diag * -1));
-	set_val(RX, add_stick(RX, cur_aa_diag * -1));
-	wait(AA_SPEED);
-	set_val(RX, add_stick(RX, cur_aa_size * -1));
-	wait(AA_SPEED);
-	set_val(RY, add_stick(RY, cur_aa_diag));
-	set_val(RX, add_stick(RX, cur_aa_diag * -1));
-	wait(AA_SPEED);
-}
-
-combo INSTANT_COMBAT_JUMP {
-	set_val(JUMP_R3, 100);
-	wait(40);
-	set_val(JUMP_R3, 0);
-	wait(32);
-	set_val(JUMP_R3, 100);
-	wait(40);
-	set_val(JUMP_R3, 0);
-}
-
 combo FAST_SLIDE_JUMP {
 	set_val(CIRCLE, 100);
 	wait(112);
@@ -625,19 +645,8 @@ combo RUMBLE_FEEDBACK {
 }
 
 //============================================================================
-// FUNCTIONS (STICK, SPEICHER, LED & OLED)
+// FUNCTIONS (SPEICHER, LED & OLED)
 //============================================================================
-function add_stick(axis, offset) {
-	if (abs(get_val(axis)) < 25) {
-		return clamp_val(get_val(axis) + offset, -100, 100);
-	}
-	else if (abs(get_val(axis)) < 65) {
-		return clamp_val(get_val(axis) + (offset / 2), -100, 100);
-	}
-
-	return get_val(axis);
-}
-
 function clamp_val(v, lo, hi) {
 	if (v > hi) {
 		return hi;
@@ -663,21 +672,21 @@ function DRAW_OLED() {
 	cls_oled(OLED_BLACK);
 	rect_oled(0, 0, OLED_WIDTH, OLED_HEIGHT, OLED_BLACK, OLED_WHITE);
 	line_oled(0, 16, 127, 16, 1, OLED_WHITE);
-	// Kopfzeile
-	print(6, 4, OLED_FONT_SMALL, OLED_WHITE, TXT_TITLE[0]);
+	print(12, 4, OLED_FONT_SMALL, OLED_WHITE, TXT_TITLE[0]);
 
-	// Aktives Profil oder Easy Plate Status
 	if (plate_timer > 0) {
 		print(10, 22, OLED_FONT_SMALL, OLED_WHITE, TXT_PLATE[0]);
+	}
+	else if (rapid_fire_on) {
+		print(14, 22, OLED_FONT_SMALL, OLED_WHITE, TXT_RF_ON[0]);
 	}
 	else if (!is_ar_profile) {
 		print(18, 22, OLED_FONT_SMALL, OLED_WHITE, TXT_SMG[0]);
 	}
 	else {
-		print(14, 22, OLED_FONT_SMALL, OLED_WHITE, TXT_AR[0]);
+		print(18, 22, OLED_FONT_SMALL, OLED_WHITE, TXT_AR[0]);
 	}
 
-	// Aktuelle Rückstoß-Werte anzeigen
 	print(10, 36, OLED_FONT_SMALL, OLED_WHITE, TXT_VERT[0]);
 	print(10, 49, OLED_FONT_SMALL, OLED_WHITE, TXT_HORIZ[0]);
 
@@ -695,7 +704,7 @@ function PRINT_NUM(x, y, val) {
 	num_idx = 1;
 
 	if (val < 0) {
-		putc_oled(num_idx, 45); // '-' Zeichen
+		putc_oled(num_idx, 45);
 		num_idx++;
 		val = abs(val);
 	}
